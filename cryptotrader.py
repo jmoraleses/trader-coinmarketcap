@@ -1,14 +1,4 @@
 # -*- coding: utf-8 -*-
-
-# !pip install backtrader
-# !pip install optuna
-# !pip install optunity
-# !pip install backtrader_plotting
-# !pip install requests
-# !pip install dask-optuna
-# !pip install pandas
-# !pip install --upgrade sqlalchemy
-
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 
 import argparse
@@ -17,13 +7,9 @@ import decimal
 import json
 import os.path
 
-import backtrader as bt
 import backtrader.feeds as btfeed
-import optuna as optuna
 import pandas as pd
 import requests
-
-optuna.logging.set_verbosity(optuna.logging.WARNING)
 
 
 def parse_args():
@@ -82,7 +68,7 @@ def round_down(value, decimals):
 
 
 
-if __name__ == '__main__':
+def antes():
 
     # Pasando argumento
     # -s CAKE/BUSD -hora "02/01/2021 00:00:00" -cash 70.0 -t 4h -cycle 100
@@ -146,7 +132,7 @@ if __name__ == '__main__':
     # print('Intervalo: {}'.format(timeframe))
 
     # timeframe y compresión
-    compression_actual, timeframe_actual = timeFrame(i)  # (timeframe)
+    # compression_actual, timeframe_actual = timeFrame(i)  # (timeframe)
 
     # Cargar csv
     data = btfeed.GenericCSVData(
@@ -163,21 +149,32 @@ if __name__ == '__main__':
         volume=7,
         adj_close=8,
         openinterest=-1,
-        timeframe=timeframe_actual,
-        compression=compression_actual,
+        # timeframe=timeframe_actual,
+        # compression=compression_actual,
     )
     datos = data
 
     # print('precio actual: {}'.format(precioactual))
     ######
 
-    # optuna
-    study = optuna.create_study(direction="maximize")
-    study.optimize(opt_objective, n_trials=cycle)
+    # # optuna
+    # study = optuna.create_study(direction="maximize")
+    # study.optimize(opt_objective, n_trials=cycle)
 
     # print(study.best_params)
-    parametros_optimos = study.best_params
-    trial = study.best_trial
-    print('Saldo máximo: {}'.format(trial.value))
-    print(parametros_optimos)
+    # parametros_optimos = study.best_params
+    # trial = study.best_trial
+    # print('Saldo máximo: {}'.format(trial.value))
+    # print(parametros_optimos)
     print()
+
+
+
+if __name__ == '__main__':
+
+
+
+
+    print()
+
+
