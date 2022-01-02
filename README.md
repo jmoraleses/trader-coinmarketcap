@@ -1,2 +1,2 @@
-# trader-coinmarketcap
+# Trader with coinmarketcap
 Trader with coinmarketcap
