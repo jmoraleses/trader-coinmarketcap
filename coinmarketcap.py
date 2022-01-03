@@ -1,38 +1,12 @@
 """ Module for requesting data from coinmarketcap.org and parsing it. """
-from datetime import datetime
-import json
-import logging
-from io import StringIO
 
-import lxml.html
-from random import random
 import requests
-import time
-
 from bs4 import BeautifulSoup
-from future.utils import iteritems
-from lxml import etree
-
-# baseUrl = "http://coinmarketcap.com"
-# graphBaseUrl = "http://graphs2.coinmarketcap.com" #Coinmarket cap endpoint changed from graphs to graphs2
-
-countRequested = 0
-interReqTime = 20
-lastReqTime = None
 
 
 def _request(target):
     """Private method for requesting an arbitrary query string."""
-    global countRequested
-    global lastReqTime
-    if lastReqTime is not None and time.time() - lastReqTime < interReqTime:
-        timeToSleep = random()*(interReqTime-time.time()+lastReqTime)*2
-        logging.info("Sleeping for {0} seconds before request.".format(timeToSleep))
-        time.sleep(timeToSleep)
-    logging.info("Issuing request for the following target: {0}".format(target))
     r = requests.get(target)
-    lastReqTime = time.time()
-    countRequested += 1
     if r.status_code == requests.codes.ok:
         return r.text
     else:
@@ -59,49 +33,35 @@ def parseList(broken_html, type):
     tbody = soup.find('tbody')
 
     for row in tbody.find_all('tr'):
-        a = row.find('a', class_='cmc-link')
-        if a is not None:
-            slug = a.get('href')
-            name = a.find('p').text
         symbol = row.find('p', class_='coin-item-symbol').text
         img = row.select_one("td > div > img").get('src')
+        price = row.findAll("td")[3].text.replace('$', '').replace('...', '000').replace('.', ',')
+        price_1h_ = row.findAll("td")[4]
+        price_1h = row.findAll("td")[4].text.replace('%', '').replace('.', ',')
+        if price_1h_.find("span", class_='icon-Caret-up') is not None:
+            price_1h_change = 'up'
+        else:
+            price_1h_change = 'down'
+        price_24h_ = row.findAll("td")[5]
+        price_24h = row.findAll("td")[5].text.replace('%', '').replace('.', ',')
+        if price_24h_.find("span", class_='icon-Caret-up') is not None:
+            price_24h_change = 'up'
+        else:
+            price_24h_change = 'down'
+        market_cap = row.findAll("td")[6].text.replace('$', '').replace(',', '')
+        volume_24h = row.findAll("td")[7].text.replace('$', '').replace(',', '')
+
+        # a = row.find('a', class_='cmc-link')
+        # if a is not None:
+        #     slug = a.get('href')
+        #     name = a.find('p').text
+
         if img.find('1839') != -1:
-            data.append({'symbol': symbol, 'name': name, 'slug': slug, 'binance': 'Binance Coin'})
+            data.append({'symbol': symbol, 'price': price, 'price_1h': price_1h, 'price_1h_change': price_1h_change,
+                         'price_24h': price_24h, 'price_24h_change': price_24h_change,
+                         'market_cap': market_cap, 'volume_24h': volume_24h})
+            # data.append({'symbol': symbol, 'name': name, 'slug': slug, 'binance': 'Binance Coin'})
 
     # print(data)
     return data
 
-
-def parseMarketCap(jsonDump, slug):
-    """ """
-    data = []
-    rawData = json.loads(jsonDump)
-
-    print(rawData)
-    # Covert data in document to wide format
-    dataIntermediate = {}
-    targetFields = [str(key.replace('_data', '')) for key in rawData.keys()]
-    for field, fieldData in iteritems(rawData):
-        for row in fieldData:
-            time = int(row[0]/1000)
-            if time not in dataIntermediate:
-                dataIntermediate[time] = dict(zip(targetFields, [None]*len(targetFields)))
-            dataIntermediate[time][field] = row[1]
-
-    # Generate derived data & alter format
-    times = sorted(dataIntermediate.keys())
-    for time in times:
-        datum = dataIntermediate[time]
-        datum['slug'] = slug
-        datum['time'] = datetime.utcfromtimestamp(time)
-
-        if (datum['market_cap_by_available_supply'] is not None
-            and datum['price_usd'] is not None
-            and datum['price_usd'] is not 0):
-            datum['est_available_supply'] = float(datum['market_cap_by_available_supply'] / datum['price_usd'])
-        else:
-            datum['est_available_supply'] = None
-
-        data.append(datum)
-
-    return data

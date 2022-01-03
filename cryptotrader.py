@@ -16,7 +16,7 @@ from dateutil.relativedelta import relativedelta
 from requests import Session
 from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
 
-from scrape import scrapeTokenList, scrapeMarketCap
+from scrape import scrapeTokenList
 
 api_key = 'c78fb3e5-004d-4b44-8613-0f55a60e99c7'
 
@@ -370,26 +370,8 @@ if __name__ == '__main__':
 
     # # recuperar las últimas cryptos creadas
     tokens = scrapeTokenList("https://coinmarketcap.com/es/new/")
-    # print(df)
-    for token in tokens:
-        min_market_cap = 0.0
-        scrapeMarketCap("https://coinmarketcap.com/es/currencies" + token['slug'], token['name'], 'token', min_market_cap)
-
-    # if (scrapeMarketCap("https://coinmarketcap.com/es/currencies" + token['slug'], token['name'], 'token', min_market_cap):
-    #     logging.info("Minimum market cap reached. Stopped scraping tokens.")
-    #     break
-    # df = get_coinmarketcap_latest()
-    #
-    # # guardar datos en csv
-    # df.to_csv(filename)
-    # print(df)
-
-    # get_coinmarketcap_latest()
-    # df = get_coinmarketcap_latest()
+    df = pd.DataFrame(tokens)
+    df.to_csv(filename)
     # print(df)
 
     print()
-
-    # df = pd.read_csv(filename, sep=',', header=0,
-    #                  #names=['price', 'volume_24h', 'volume_change_24h', 'percent_change_1h', 'percent_change_24h', 'percent_change_7d', 'percent_change_30d', 'percent_change_60d', 'percent_change_90d', 'market_cap', 'market_cap_dominance', 'fully_diluted_market_cap', 'last_updated'],
-    #                  low_memory=False)
