@@ -27,7 +27,6 @@ def requestMarketCap(url):
     # print("{0}".format(url))
     return _request("{0}".format(url))
 
-
 def parseList(broken_html):
     """Parse the information returned by requestList for view 'all'."""
     data = []
@@ -39,7 +38,7 @@ def parseList(broken_html):
         img = row.select_one("td > div > img").get('src')
 
         if img.find('1839') != -1:
-            price = row.findAll("td")[3].text.replace('$', '').replace('...', '000').replace('.', ',')
+            # price = row.findAll("td")[3].text.replace('$', '').replace('...', '000').replace('.', ',')
             price_1h_ = row.findAll("td")[4]
             price_1h = row.findAll("td")[4].text.replace('%', '').replace('.', ',')
             if price_1h_.find("span", class_='icon-Caret-up') is not None:
