@@ -9,6 +9,7 @@ import os.path
 from time import sleep
 
 import backtrader.feeds as btfeed
+# import backtrader as bt
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
@@ -16,7 +17,9 @@ from dateutil.relativedelta import relativedelta
 from requests import Session
 from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
 
-from scrape import scrapeTokenList
+import coinmarketcap
+from binance import get_binance_bars
+from coinmarketcap import requestMarketCap
 
 api_key = 'c78fb3e5-004d-4b44-8613-0f55a60e99c7'
 
@@ -111,45 +114,45 @@ def get_date_range(number_of_days:int):
     return dt_start, dt_end
 
 
-
-def get_coinmarketcap_latest():
-    start_date, end_date = get_date_range(2)
-    url = f'https://coinmarketcap.com/currencies/bitcoin/historical-data/?start={start_date}&end={end_date}'
-    print(url)
-    # response = requests.get(url.format(start_date, end_date))
-
-    r = requests.get(url)
-    soup = BeautifulSoup(r.content, 'html.parser')
-
-    name = soup.find_all('a', class_='cmc-link')
-    print(name)
-
-    # print(soup.prettify())
-
-    data = []
-    table = soup.find('table', id='')
-    for row in table.find_all('tr'):
-        cells = row.findChildren('td')
-        values = []
-        for cell in cells:
-            value = cell.string
-            values.append(value)
-        try:
-            Date = values[0]
-            Open = values[1]
-            High = values[2]
-            Low = values[3]
-            Close = values[4]
-            Volume = values[5]
-            MarketCap = values[6]
-        except IndexError:
-            continue
-        data.append([Date, Open, High, Low, Close, Volume, MarketCap])
-    # Print data
-    for item in data:
-        print(item)
-    return data
-
+#
+# def get_coinmarketcap_latest():
+#     start_date, end_date = get_date_range(2)
+#     url = f'https://coinmarketcap.com/currencies/bitcoin/historical-data/?start={start_date}&end={end_date}'
+#     print(url)
+#     # response = requests.get(url.format(start_date, end_date))
+#
+#     r = requests.get(url)
+#     soup = BeautifulSoup(r.content, 'html.parser')
+#
+#     name = soup.find_all('a', class_='cmc-link')
+#     print(name)
+#
+#     # print(soup.prettify())
+#
+#     data = []
+#     table = soup.find('table', id='')
+#     for row in table.find_all('tr'):
+#         cells = row.findChildren('td')
+#         values = []
+#         for cell in cells:
+#             value = cell.string
+#             values.append(value)
+#         try:
+#             Date = values[0]
+#             Open = values[1]
+#             High = values[2]
+#             Low = values[3]
+#             Close = values[4]
+#             Volume = values[5]
+#             MarketCap = values[6]
+#         except IndexError:
+#             continue
+#         data.append([Date, Open, High, Low, Close, Volume, MarketCap])
+#     # Print data
+#     for item in data:
+#         print(item)
+#     return data
+#
 
 
 # def float_helper(string):
@@ -217,36 +220,36 @@ def get_coinmarketcap_latest_api():
     except (ConnectionError, Timeout, TooManyRedirects) as e:
         print(e)
 
-
-def get_binance_bars(symbol_data, interval, starttime, endtime):
-    url = "https://api.binance.com/api/v3/klines"
-
-    starttime = str(int(starttime.timestamp() * 1000))
-    endtime = str(int(endtime.timestamp() * 1000))
-    limit = '1000'
-
-    req_params = {"symbol": symbol_data, 'interval': interval, 'startTime': starttime, 'endTime': endtime,
-                  'limit': limit}
-
-    df_data = pd.DataFrame(json.loads(requests.get(url, params=req_params).text))
-
-    if len(df_data.index) == 0:
-        return None
-
-    df_data = df_data.iloc[:, 0:6]
-    df_data.columns = ['datetime', 'open', 'high', 'low', 'close', 'volume']
-
-    df_data.open = df_data.open.astype("float")
-    df_data.high = df_data.high.astype("float")
-    df_data.low = df_data.low.astype("float")
-    df_data.close = df_data.close.astype("float")
-    df_data.volume = df_data.volume.astype("float")
-
-    df_data['adj_close'] = df_data['close']
-
-    df_data.index = [dt.datetime.fromtimestamp(x / 1000.0) for x in df_data.datetime]
-
-    return df_data
+#
+# def get_binance_bars(symbol_data, interval, starttime, endtime):
+#     url = "https://api.binance.com/api/v3/klines"
+#
+#     starttime = str(int(starttime.timestamp() * 1000))
+#     endtime = str(int(endtime.timestamp() * 1000))
+#     limit = '64'
+#
+#     req_params = {"symbol": symbol_data, 'interval': interval, 'startTime': starttime, 'endTime': endtime,
+#                   'limit': limit}
+#
+#     df_data = pd.DataFrame(json.loads(requests.get(url, params=req_params).text))
+#
+#     if len(df_data.index) == 0:
+#         return None
+#
+#     df_data = df_data.iloc[:, 0:6]
+#     df_data.columns = ['datetime', 'open', 'high', 'low', 'close', 'volume']
+#
+#     df_data.open = df_data.open.astype("float")
+#     df_data.high = df_data.high.astype("float")
+#     df_data.low = df_data.low.astype("float")
+#     df_data.close = df_data.close.astype("float")
+#     df_data.volume = df_data.volume.astype("float")
+#
+#     df_data['adj_close'] = df_data['close']
+#
+#     df_data.index = [dt.datetime.fromtimestamp(x / 1000.0) for x in df_data.datetime]
+#
+#     return df_data
 
 
 def round_down(value, decimals):
@@ -363,13 +366,14 @@ if __name__ == '__main__':
 
     # calcular día de hoy y de ayer
     date = dt.datetime.now().date()
-    timeframe = dt.datetime.strftime(date, '%d-%m-%Y')
-    print(timeframe)
-    timeframe_before_1_day = dt.datetime.strftime(dt.datetime.now() - dt.timedelta(days=1), '%d-%m-%Y %H:%M:%S')
-    filename = '{}_{}.csv'.format("coinmarketcap", timeframe)
+    last_date = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S') - dt.timedelta(days=1)
+    time_last_ticker = dt.datetime.strptime(last_date.strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
+    time_now_ticker = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
+    filename = '{}_{}.csv'.format("coinmarketcap", date)
 
-    # # recuperar las últimas cryptos creadas
-    tokens = scrapeTokenList("https://coinmarketcap.com/es/new/")
+    # recuperar las últimas cryptos creadas
+    html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
+    tokens = coinmarketcap.parseList(html)
     df = pd.DataFrame(tokens)
     df.to_csv(filename)
     # print(df)
