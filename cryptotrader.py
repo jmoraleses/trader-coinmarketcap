@@ -2,14 +2,12 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 import argparse
 import datetime as dt
-import decimal
 import json
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 from requests import Session
 from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
 import coinmarketcap
-
 
 api_key = 'c78fb3e5-004d-4b44-8613-0f55a60e99c7'
 
@@ -76,13 +74,6 @@ def get_coinmarketcap_latest_api():
         return df
     except (ConnectionError, Timeout, TooManyRedirects) as e:
         print(e)
-
-
-def round_down(value, decimals):
-    with decimal.localcontext() as ctx:
-        d = decimal.Decimal(value)
-        ctx.rounding = decimal.ROUND_FLOOR
-        return round(d, decimals)
 
 
 if __name__ == '__main__':
