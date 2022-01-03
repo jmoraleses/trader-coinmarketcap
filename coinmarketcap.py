@@ -59,9 +59,10 @@ def parseList(broken_html):
 
             #data get url for each token
             token = requestMarketCap("https://coinmarketcap.com/currencies/" + name.replace(' ', '-'))  # +"/historical-data/?start="+time_last_ticker+"&end="+time_now_ticker)
-            url_token = parseToken(token).replace('https://bscscan.com/token/', '')
+            url_token, price_token, volume_token = parseToken(token)
 
-            data.append({'name': name, 'symbol': symbol, 'price': price, 'price_1h': price_1h, 'price_1h_change': price_1h_change,
+            data.append({'name': name, 'symbol': symbol, 'price': price_token, 'volume': volume_token,
+                         'price_1h': price_1h, 'price_1h_change': price_1h_change,
                          'price_24h': price_24h, 'price_24h_change': price_24h_change,
                          'market_cap': market_cap, 'volume_24h': volume_24h, 'url': url_token})
             time.sleep(1.2)
@@ -73,6 +74,11 @@ def parseToken(broken_html):
     soup = BeautifulSoup(broken_html, 'html.parser')
     content = soup.find('body')
     div = content.find('div', class_='content')
-    url = div.find('a', class_='cmc-link').get('href')
+    url = div.find('a', class_='cmc-link').get('href').replace('https://bscscan.com/token/', '')
+    tbody = soup.find('tbody')
+    price = tbody.findAll("td")[0].text.replace('$', '').replace('.', ',')
+    volume = tbody.findAll("td")[3].find("span").text.replace('$', '').replace(',', '').replace('.', ',')
+    # print(price)
+    # print(volume)
     # print(url)
-    return url
+    return url, price, volume

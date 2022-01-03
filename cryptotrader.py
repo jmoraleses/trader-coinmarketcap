@@ -376,6 +376,6 @@ if __name__ == '__main__':
     tokens = coinmarketcap.parseList(html)
     df = pd.DataFrame(tokens)
     df.to_csv(filename)
-    # print(df)
+    print(df)
 
     print()
