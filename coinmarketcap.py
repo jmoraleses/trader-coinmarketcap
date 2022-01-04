@@ -4,6 +4,8 @@ import os
 import random
 import time
 import datetime as dt
+from decimal import Decimal
+
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
@@ -155,4 +157,4 @@ def parseToken(broken_html):
     # print(price)
     # print(volume)
     # print(url)
-    return url, price, volume
+    return url, format(float(price), '.15f'), format(float(volume), '.4f')

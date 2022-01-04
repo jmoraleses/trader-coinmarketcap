@@ -5,6 +5,7 @@ import argparse
 import datetime as dt
 import os
 import time
+from multiprocessing import Process
 
 import pandas as pd
 from dateutil.relativedelta import relativedelta
@@ -37,8 +38,7 @@ def get_date_range(number_of_days:int):
     return dt_start, dt_end
 
 
-
-if __name__ == '__main__':
+def control():
 
     # calcular día de hoy y de ayer
     date = dt.datetime.now().date()
@@ -49,36 +49,47 @@ if __name__ == '__main__':
 
     # recuperar el precio y volumen de las últimas cryptos creadas
     # repetir el proceso cada 5 minutos
-    while(True):
-        if True:
-        #if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
+    while True:
+        # if True: #
+        if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
             html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
             tokens = coinmarketcap.parseList(html)
             # recuperar los precios y volumenes dado el nombre de la crypto
             # empezar a analizar los valores
             for token in tokens:
-                df = pd.read_csv(token+".csv", index_col=0)
+                df3 = pd.read_csv(token+".csv", index_col=0)
 
-                for i in range(0, len(df.index)-2):
-                    volumen1 = df.iloc[i]['volume']
-                    volumen2 = df.iloc[i+1]['volume']
+                # para cada crypto, recuperar el precio y volumen relativos
+                for i in range(0, len(df3.index)-2):
+
+                    volumen1 = df3['volume'].iloc[i].astype(float)
+                    volumen2 = df3['volume'].iloc[i+1].astype(float)
                     cambio_relativo_volume = 1 / (volumen1 / volumen2)
-                    price1 = df.iloc[i]['price']
-                    price2 = df.iloc[i + 1]['price']
+                    price1 = df3.iloc[i]['price'].astype(float)
+                    price2 = df3.iloc[i+1]['price'].astype(float)
                     cambio_relativo_price = 1 / (price1 / price2)
-                    data = pd.json_normalize({'time': time_now_ticker, 'name': token, 'price': cambio_relativo_price, 'volume': cambio_relativo_volume})
+                    data = pd.json_normalize({'time': time_now_ticker, 'name': token, 'price_relative': cambio_relativo_price, 'volume_relative': cambio_relativo_volume})
                     if os.path.isfile(token+"_changes.csv"):
-                        df = pd.read_csv(token+"_changes.csv", index_col=0)
-                        df = df.append(data, ignore_index=True)
+                        df4 = pd.read_csv(token+"_changes.csv", index_col=0)
+                        df4 = df4.append(data, ignore_index=True)
                     else:
-                        df = pd.DataFrame(data)
-                    df.to_csv(token+"_changes.csv")
+                        df4 = pd.DataFrame(data)
+                    df4.to_csv(token+"_changes.csv")
 
-                print("now")
-                time.sleep(60)
-
+                # recuperamos el archivo con los precios y volumes relativos
+                if os.path.isfile(token + "_changes.csv"):
+                    df5 = pd.read_csv(token+"_changes.csv", index_col=0)
+                    data = pd.json_normalize({'time': time_now_ticker, 'name': token, 'price_percentage': df5['price_relative'].mean(), 'volume_percentage': df5['volume_relative'].mean()})
+                    df5 = pd.DataFrame(data)
+                    df5.to_csv(token+"_relative.csv")
 
         else:
             time.sleep(1)
 
+
+if __name__ == '__main__':
+
+    p = Process(target=control)
+    p.start()
+    p.join()
     print()
