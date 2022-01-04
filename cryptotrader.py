@@ -60,7 +60,7 @@ def control():
                 df3 = pd.read_csv(token+".csv", index_col=0)
 
                 # para cada crypto, recuperar el precio y volumen relativos
-                for i in range(0, len(df3.index)-2):
+                for i in range(0, len(df3.index)-1):
 
                     volumen1 = df3['volume'].iloc[i].astype(float)
                     volumen2 = df3['volume'].iloc[i+1].astype(float)
@@ -76,10 +76,10 @@ def control():
                         df4 = pd.DataFrame(data)
                     df4.to_csv(token+"_changes.csv")
 
-                # recuperamos el archivo con los precios y volumes relativos
+                # recuperamos el archivo con los precios y volumes relativos (average)
                 if os.path.isfile(token + "_changes.csv"):
                     df5 = pd.read_csv(token+"_changes.csv", index_col=0)
-                    data = pd.json_normalize({'time': time_now_ticker, 'name': token, 'price_percentage': df5['price_relative'].mean(), 'volume_percentage': df5['volume_relative'].mean()})
+                    data = pd.json_normalize({'time': time_now_ticker, 'name': token, 'price_relative_average': df5['price_relative'].mean(), 'volume_relative_average': df5['volume_relative'].mean()})
                     df5 = pd.DataFrame(data)
                     df5.to_csv(token+"_relative.csv")
 
@@ -93,5 +93,9 @@ if __name__ == '__main__':
 
     p = Process(target=control)
     p.start()
+
+
+
+
     p.join()
     print()
