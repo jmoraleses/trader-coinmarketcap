@@ -3,6 +3,7 @@ from __future__ import (absolute_import, division, print_function, unicode_liter
 
 import argparse
 import datetime as dt
+import os
 import time
 
 import pandas as pd
@@ -49,13 +50,32 @@ if __name__ == '__main__':
     # recuperar el precio y volumen de las últimas cryptos creadas
     # repetir el proceso cada 5 minutos
     while(True):
-        if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
+        if True:
+        #if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
             html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
             tokens = coinmarketcap.parseList(html)
             # recuperar los precios y volumenes dado el nombre de la crypto
             # empezar a analizar los valores
             for token in tokens:
-                df = pd.read_csv(token)
+                df = pd.read_csv(token+".csv")
+
+                for i in range(len(df.index)-1):
+                    volumen1 = df.iloc[i]['volume']
+                    volumen2 = df.iloc[i+1]['volume']
+                    cambio_relativo_volume = 1 / (volumen1 / volumen2)
+                    price1 = df.iloc[i]['price']
+                    price2 = df.iloc[i + 1]['price']
+                    cambio_relativo_price = 1 / (price1 / price2)
+                    data = pd.json_normalize({'time': time_now_ticker, 'name': token, 'price': cambio_relativo_price, 'volume': cambio_relativo_volume})
+                    if os.path.isfile(token+"_changes.csv"):
+                        df = pd.read_csv(token+"_changes.csv")
+                        df = df.append(data, ignore_index=True)
+                    else:
+                        df = pd.DataFrame(data)
+                    df.to_csv(token+"_changes.csv")
+
+                print("now")
+                time.sleep(60)
 
 
         else:
