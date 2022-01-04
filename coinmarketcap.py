@@ -74,6 +74,7 @@ def requestMarketCap(url):
 def parseList(broken_html):
     """Parse the information returned by requestList for view 'all'."""
     data = []
+    tokens = []
     soup = BeautifulSoup(broken_html, 'html.parser')
     tbody = soup.find('tbody')
 
@@ -110,6 +111,9 @@ def parseList(broken_html):
                          'price_24h': price_24h, 'price_24h_change': price_24h_change,
                          'market_cap': market_cap, 'volume_24h': volume_24h, 'url': url_token})
 
+            # si el token no está en la lista, añadir
+            if name not in tokens:
+                tokens.append(name)
 
             filename = '{}.csv'.format(name.replace(' ', '-'))
             if os.path.isfile(filename):
@@ -122,7 +126,8 @@ def parseList(broken_html):
         time.sleep(random.randint(2, 7))
 
     # print(data)
-    return data
+    return tokens
+
 
 def parseToken(broken_html):
     soup = BeautifulSoup(broken_html, 'html.parser')

@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function, unicode_literals)
+
 import argparse
 import datetime as dt
-import json
+import time
+
 import pandas as pd
 from dateutil.relativedelta import relativedelta
-from requests import Session
-from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
+
 import coinmarketcap
 
 
@@ -45,11 +46,19 @@ if __name__ == '__main__':
     time_now_ticker = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
     # filename = '{}_{}.csv'.format("coinmarketcap", date)
 
-    # recuperar las últimas cryptos creadas
-    html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
-    tokens = coinmarketcap.parseList(html)
-    # df = pd.DataFrame(tokens)
-    # df.to_csv(filename)
-    # print(df)
+    # recuperar el precio y volumen de las últimas cryptos creadas
+    # repetir el proceso cada 5 minutos
+    while(True):
+        if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
+            html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
+            tokens = coinmarketcap.parseList(html)
+            # recuperar los precios y volumenes dado el nombre de la crypto
+            # empezar a analizar los valores
+            for token in tokens:
+                df = pd.read_csv(token)
+
+
+        else:
+            time.sleep(1)
 
     print()
