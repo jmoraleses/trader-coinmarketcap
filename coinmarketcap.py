@@ -117,16 +117,6 @@ def parseList(broken_html):
                              'price_24h': price_24h, 'price_24h_change': price_24h_change,
                              'market_cap': market_cap, 'volume_24h': volume_24h, 'url': url_token})
 
-                # df2 = pd.DataFrame(data)
-                # df2 = df2.iloc[:, 0:12]
-                # df2.columns = ['time', 'name', 'symbol', 'price', 'volume', 'price_1h', 'price_1h_change',
-                #               'price_24h', 'price_24h_change', 'market_cap', 'volume_24h', 'url']
-                #
-                # df2.index.name = 'number'
-
-                # df2.index = pd.to_datetime(df2['time'], unit='s')
-                # df2 = df2.rename_axis('index').reset_index()
-
                 # si el token no está en la lista, añadir
                 if name not in tokens:
                     tokens.append(name.replace(' ', '-'))

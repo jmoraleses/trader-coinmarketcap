@@ -83,6 +83,8 @@ def control():
                     df5 = pd.DataFrame(data)
                     df5.to_csv(token+"_relative.csv")
 
+
+
         else:
             time.sleep(1)
 
