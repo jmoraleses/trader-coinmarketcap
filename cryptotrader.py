@@ -57,9 +57,9 @@ if __name__ == '__main__':
             # recuperar los precios y volumenes dado el nombre de la crypto
             # empezar a analizar los valores
             for token in tokens:
-                df = pd.read_csv(token+".csv")
+                df = pd.read_csv(token+".csv", index_col=0)
 
-                for i in range(len(df.index)-1):
+                for i in range(1, len(df.index)-1):
                     volumen1 = df.iloc[i]['volume']
                     volumen2 = df.iloc[i+1]['volume']
                     cambio_relativo_volume = 1 / (volumen1 / volumen2)
@@ -68,7 +68,7 @@ if __name__ == '__main__':
                     cambio_relativo_price = 1 / (price1 / price2)
                     data = pd.json_normalize({'time': time_now_ticker, 'name': token, 'price': cambio_relativo_price, 'volume': cambio_relativo_volume})
                     if os.path.isfile(token+"_changes.csv"):
-                        df = pd.read_csv(token+"_changes.csv")
+                        df = pd.read_csv(token+"_changes.csv", index_col=0)
                         df = df.append(data, ignore_index=True)
                     else:
                         df = pd.DataFrame(data)
