@@ -59,7 +59,7 @@ if __name__ == '__main__':
             for token in tokens:
                 df = pd.read_csv(token+".csv", index_col=0)
 
-                for i in range(1, len(df.index)-1):
+                for i in range(0, len(df.index)-2):
                     volumen1 = df.iloc[i]['volume']
                     volumen2 = df.iloc[i+1]['volume']
                     cambio_relativo_volume = 1 / (volumen1 / volumen2)
