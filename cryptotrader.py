@@ -83,19 +83,32 @@ def control():
                     df5 = pd.DataFrame(data)
                     df5.to_csv(token+"_relative.csv")
 
+                    # # si el precio está aumentando y el volumen también
+                    # # si desde la primera cifra hasta ahora ha incrementado el volumen en x%
+                    # last_volume = df3["volume"].iloc[-1]
+                    # ini_volume = df3["volume"].iloc[0]
+                    # last_price = df3["price"].iloc[-1]
+                    # ini_price = df3["price"].iloc[0]
+                    # if (last_volume > ini_volume) and (last_price > ini_price) and last_volume > 200000:
+                    #     # comprar
+                    #     pass
 
 
         else:
             time.sleep(1)
 
 
+def buyORsell():
+    pass
+
+
 if __name__ == '__main__':
 
     p = Process(target=control)
+    s = Process(target=buyORsell)
     p.start()
-
-
-
+    s.start()
 
     p.join()
+    s.join()
     print()
