@@ -135,19 +135,19 @@ def buyORsell():
 
 def optuna():
     global all_tokens
-    for token in all_tokens:
-        backtrader_optuna.optuna_search(token, 20)
+    #for token in all_tokens:
+    backtrader_optuna.optuna_search("Xenoverse-Crypto")
 
 
 if __name__ == '__main__':
-    p = Process(target=control)
-    s = Process(target=buyORsell)
+    # p = Process(target=control)
+    # s = Process(target=buyORsell)
     o = Process(target=optuna)
-    p.start()
-    s.start()
+    # p.start()
+    # s.start()
     o.start()
 
-    p.join()
-    s.join()
+    # p.join()
+    # s.join()
     o.join()
     print()

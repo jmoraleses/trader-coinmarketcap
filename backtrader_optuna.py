@@ -13,15 +13,16 @@ optuna.logging.set_verbosity(optuna.logging.WARNING)
 
 
 class Bits(bt.Strategy):
-    # params = (
-    #     ('posiciones', 1),
-    #     ('price_relative_range', 1),
-    #     ('volume_relative_range', 1),
-    #     ('percentage', 1),
-    # )
+    params = (
+        ('range', 1),
+        ('price_relative_range', 1),
+        ('volume_relative_range', 1),
+        ('percentage', 1),
+    )
 
     def __init__(self):
-        self.posiciones = self.params.posiciones
+
+        self.range = self.params.range
         self.price_relative_range = self.params.price_relative_range
         self.volume_relative_range = self.params.volume_relative_range
         self.percentage = self.params.percentage
@@ -31,7 +32,7 @@ class Bits(bt.Strategy):
 
     def next(self):
 
-        if (self.data.price.iloc[self.posiciones].mean() >= self.price_relative_range) and (self.data.volume.iloc[self.posiciones].mean() >= self.volume_relative_range):
+        if (self.data.price.iloc[self.range].mean() >= self.price_relative_range) and (self.data.volume.iloc[self.range].mean() >= self.volume_relative_range):
             # self.y = self.broker.get_value() / self.data.price_relative[0]
             # self.order = self.buy(size=self.y, price=self.data.price_relative[0])
             # self.order = self.buy(size=self.broker.get_value(), price=self.data.price[0])
@@ -55,10 +56,10 @@ data = None
 def opt_objective(trial):
     global data
 
-    posiciones = trial.suggest_int('posiciones', 2, 144) # 144 = 12hrs
+    range = trial.suggest_int('range', 2, 144) # 144 = 12hrs
     price_relative_range = trial.suggest_float('price_relative_range', 0.0, 2.0)
     volume_relative_range = trial.suggest_float('volume_relative_range', 0.0, 2.0)
-    percentage = trial.suggest_int('percentage', 20, 100, 5)
+    percentage = trial.suggest_int('percentage', 20, 100)
 
     cerebro = bt.Cerebro()
     cerebro.broker.set_coc(True)
@@ -66,23 +67,24 @@ def opt_objective(trial):
     cerebro.broker.setcash(cash=100.0) # 100€
     # cerebro.addwriter(bt.WriterFile, out='analisis.txt')
     # cerebro.addanalyzer(bt.analyzers.PyFolio, _name='pyfolio')
-    cerebro.addstrategy(Bits, posiciones=posiciones, price_relative_range=price_relative_range, volume_relative_range=volume_relative_range, percentage=percentage)
+    cerebro.addstrategy(Bits, range=range, price_relative_range=price_relative_range, volume_relative_range=volume_relative_range, percentage=percentage)
     cerebro.adddata(data)
     cerebro.run()
 
     return float(cerebro.broker.get_value())
 
 
-def optuna_search(token, cycle):
+def optuna_search(token):
     global data
     filename = "csv/" + token + ".csv"
     time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
+
     if os.path.isfile(filename):
         df = pd.read_csv(filename, index_col=0)
-
+        time_ini = dt.datetime.strptime(df['time'].iloc[0], '%Y-%m-%d %H:%M:%S')
         data = btfeed.GenericCSVData(
             dataname=filename,
-            fromdate=df['time'].iloc[0],
+            fromdate=time_ini,
             todate=time_now,
             nullvalue=0.0,
             dtformat='%Y-%m-%d %H:%M:%S',
@@ -99,7 +101,7 @@ def optuna_search(token, cycle):
         )
 
         study = optuna.create_study(direction="maximize")
-        study.optimize(opt_objective, n_trials=cycle)
+        study.optimize(opt_objective, n_trials=1000) # ciclos de optimizacion
         parametros_optimos = study.best_params
         trial = study.best_trial
         print('Saldo máximo: {}'.format(trial.value))
