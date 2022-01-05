@@ -7,9 +7,10 @@ import os
 import time
 from multiprocessing import Process
 
+import optuna
 import pandas as pd
 from dateutil.relativedelta import relativedelta
-
+import backtrader_optuna
 import coinmarketcap
 
 
@@ -60,6 +61,7 @@ def control():
     while True:
         # if True: #
         if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
+            time_now_ticker = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
             html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
             tokens = coinmarketcap.parseList(html)
             all_tokens = tokens
@@ -73,9 +75,13 @@ def control():
 
                     volumen1 = df3['volume'].iloc[i].astype(float)
                     volumen2 = df3['volume'].iloc[i + 1].astype(float)
+                    if volumen1 is 0 or volumen2 is 0:
+                        break
                     cambio_relativo_volume = 1 / (volumen1 / volumen2)
                     price1 = df3.iloc[i]['price'].astype(float)
                     price2 = df3.iloc[i + 1]['price'].astype(float)
+                    if price1 is 0 or price2 is 0:
+                        break
                     cambio_relativo_price = 1 / (price1 / price2)
                     data = pd.json_normalize(
                         {'time': time_now_ticker, 'name': token, 'price_relative': cambio_relativo_price,
@@ -127,12 +133,21 @@ def buyORsell():
 
 
 
+def optuna():
+    global all_tokens
+    for token in all_tokens:
+        backtrader_optuna.optuna_search(token, 20)
+
+
 if __name__ == '__main__':
     p = Process(target=control)
     s = Process(target=buyORsell)
+    o = Process(target=optuna)
     p.start()
     s.start()
+    o.start()
 
     p.join()
     s.join()
+    o.join()
     print()
