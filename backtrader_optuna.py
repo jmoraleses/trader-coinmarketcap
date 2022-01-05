@@ -2,16 +2,16 @@ from __future__ import (absolute_import, division, print_function, unicode_liter
 
 import datetime as dt
 import os
-
+import statistics
 import backtrader as bt
 import backtrader.feeds as btfeed
 import optuna as optuna
 import pandas as pd
-
+import numpy as np
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
 
-
+data = None
 class Bits(bt.Strategy):
     params = (
         ('range', 1),
@@ -21,7 +21,6 @@ class Bits(bt.Strategy):
     )
 
     def __init__(self):
-
         self.range = self.params.range
         self.price_relative_range = self.params.price_relative_range
         self.volume_relative_range = self.params.volume_relative_range
@@ -29,20 +28,30 @@ class Bits(bt.Strategy):
 
         self.eur = self.broker.getcash() #self.broker.get_value()
 
+    def average(self):
+        precios = []
+        volumenes = []
+        for i in range(self.range, self.data.size()):
+            precios.append(self.data.open[i])
+            volumenes.append(self.data.volume[i])
+        self.volumen_relativo = np.mean(volumenes)
+        self.precio_relativo = np.mean(precios)
+
 
     def next(self):
+        self.average()
 
-        if (self.data.price.iloc[self.range].mean() >= self.price_relative_range) and (self.data.volume.iloc[self.range].mean() >= self.volume_relative_range):
+        if (self.precio_relativo >= self.price_relative_range) and (self.volumen_relativo >= self.volume_relative_range):
             # self.y = self.broker.get_value() / self.data.price_relative[0]
             # self.order = self.buy(size=self.y, price=self.data.price_relative[0])
             # self.order = self.buy(size=self.broker.get_value(), price=self.data.price[0])
             self.before = self.broker.get_value()
-            self.y = self.broker.get_value() / self.data.price[0]
-            self.order = self.sell(size=self.y, price=self.data.price[0])
+            self.y = self.broker.get_value() / self.data.open[0]
+            self.order = self.buy(size=self.y, price=self.data.open[0])
 
         if (self.broker.get_value() >= self.before * self.percentage):
-            self.y = self.broker.get_value() / self.data.price[0]
-            self.order = self.sell(size=self.y, price=self.data.price[0])
+            self.y = self.broker.get_value() / self.data.open[0]
+            self.order = self.sell(size=self.y, price=self.data.open[0])
 
 
     def stop(self):
@@ -52,11 +61,11 @@ class Bits(bt.Strategy):
                                                             self.volume_relative_range, self.percentage))
 
 
-data = None
+
 def opt_objective(trial):
     global data
-
-    range = trial.suggest_int('range', 2, 144) # 144 = 12hrs
+    range = trial.suggest_int('range', 5, 50) # 144 = 12hrs
+    rango = range
     price_relative_range = trial.suggest_float('price_relative_range', 0.0, 2.0)
     volume_relative_range = trial.suggest_float('volume_relative_range', 0.0, 2.0)
     percentage = trial.suggest_int('percentage', 20, 100)
@@ -101,7 +110,7 @@ def optuna_search(token):
         )
 
         study = optuna.create_study(direction="maximize")
-        study.optimize(opt_objective, n_trials=1000) # ciclos de optimizacion
+        study.optimize(opt_objective, n_trials=100) # ciclos de optimizacion
         parametros_optimos = study.best_params
         trial = study.best_trial
         print('Saldo máximo: {}'.format(trial.value))
