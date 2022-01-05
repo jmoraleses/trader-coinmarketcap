@@ -144,8 +144,10 @@ def parseToken(broken_html):
     url = div.find('a', class_='cmc-link').get('href').replace('https://bscscan.com/token/', '')
     tbody = soup.find('tbody')
     price = tbody.findAll("td")[0].text.replace('$', '')#.replace('.', ',')
-    volume = tbody.findAll("td")[3].find("span").text.replace('$', '').replace(',', '')#.replace('.', ',')
-    # print(price)
-    # print(volume)
-    # print(url)
-    return url, format(float(price), '.15f'), format(float(volume), '.4f')
+
+    try:
+        volume = tbody.findAll("td")[3].find("span").text.replace('$', '').replace(',', '')
+        return url, format(float(price), '.15f'), format(float(volume), '.4f')
+    except:
+        volume = 0
+        return url, format(float(price), '.15f'), format(float(volume), '.4f')

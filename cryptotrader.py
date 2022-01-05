@@ -121,8 +121,9 @@ def buyORsell():
     for token in all_tokens:
         if os.path.isfile("csv/" + token + "_changes.csv"):
             df9 = pd.read_csv("csv/" + token['name'] + "_changes.csv", index_col=0)
-            if df9['price_relative_average'].iloc[-12].mean() > 1.1 and df9['volume_relative_average'].iloc[-12].mean() > 1.1:
-                print("Buy " + token['name'] + " a " + df9['price'].iloc[-1] + " a las " + dt.datetime.now())
+            if (df9.index >= 12):
+                if df9['price_relative_average'].iloc[-12].mean() > 1.1 and df9['volume_relative_average'].iloc[-12].mean() > 1.1:
+                    print("Buy " + token['name'] + " a " + df9['price'].iloc[-1] + " a las " + dt.datetime.now())
 
 
 
