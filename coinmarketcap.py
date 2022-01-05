@@ -130,7 +130,7 @@ def parseList(broken_html):
                 df = pd.DataFrame(data)
                 df.to_csv(filename)
 
-        time.sleep(random.randint(3, 9))
+        time.sleep(random.randint(3, 5))
         #
 
     # print(data)
