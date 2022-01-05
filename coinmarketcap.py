@@ -115,13 +115,13 @@ def parseList(broken_html):
             data = pd.json_normalize({'time': time_now, 'name': name, 'symbol': symbol, 'price': price_token, 'volume': volume_token,
                          'price_1h': price_1h, 'price_1h_change': price_1h_change,
                          'price_24h': price_24h, 'price_24h_change': price_24h_change,
-                         'market_cap': market_cap, 'volume_24h': volume_24h, 'url': url_token})
+                         'market_cap': market_cap, 'volume_24h': volume_24h, 'url_token': url_token, 'url': "https://coinmarketcap.com" + url})
 
             # si el token no está en la lista, añadir
             if name not in tokens:
                 tokens.append(name.replace(' ', '-'))
 
-            filename = '{}.csv'.format(name.replace(' ', '-'))
+            filename = 'csv/{}.csv'.format(name.replace(' ', '-'))
             if os.path.isfile(filename):
                 df = pd.read_csv(filename, index_col=0)
                 df = df.append(data, ignore_index=True)

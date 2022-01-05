@@ -38,7 +38,12 @@ def get_date_range(number_of_days:int):
     return dt_start, dt_end
 
 
+all_tokens = []
 def control():
+    global all_tokens
+
+    if not os.path.exists("csv"):
+        os.makedirs("csv")
 
     # calcular día de hoy y de ayer
     date = dt.datetime.now().date()
@@ -54,10 +59,11 @@ def control():
         if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
             html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
             tokens = coinmarketcap.parseList(html)
+            all_tokens = tokens
             # recuperar los precios y volumenes dado el nombre de la crypto
             # empezar a analizar los valores
             for token in tokens:
-                df3 = pd.read_csv(token+".csv", index_col=0)
+                df3 = pd.read_csv("csv/"+token+".csv", index_col=0)
 
                 # para cada crypto, recuperar el precio y volumen relativos
                 for i in range(0, len(df3.index)-1):
@@ -69,37 +75,36 @@ def control():
                     price2 = df3.iloc[i+1]['price'].astype(float)
                     cambio_relativo_price = 1 / (price1 / price2)
                     data = pd.json_normalize({'time': time_now_ticker, 'name': token, 'price_relative': cambio_relativo_price, 'volume_relative': cambio_relativo_volume})
-                    if os.path.isfile(token+"_changes.csv"):
-                        df4 = pd.read_csv(token+"_changes.csv", index_col=0)
+                    if os.path.isfile("csv/"+token+"_changes.csv"):
+                        df4 = pd.read_csv("csv/"+token+"_changes.csv", index_col=0)
                         df4 = df4.append(data, ignore_index=True)
                     else:
                         df4 = pd.DataFrame(data)
-                    df4.to_csv(token+"_changes.csv")
+                    df4.to_csv("csv/"+token+"_changes.csv")
 
                 # recuperamos el archivo con los precios y volumes relativos (average)
-                if os.path.isfile(token + "_changes.csv"):
-                    df5 = pd.read_csv(token+"_changes.csv", index_col=0)
+                if os.path.isfile("csv/"+token + "_changes.csv"):
+                    df5 = pd.read_csv("csv/"+token+"_changes.csv", index_col=0)
                     data = pd.json_normalize({'time': time_now_ticker, 'name': token, 'price_relative_average': df5['price_relative'].mean(), 'volume_relative_average': df5['volume_relative'].mean()})
                     df5 = pd.DataFrame(data)
-                    df5.to_csv(token+"_relative.csv")
-
-                    # # si el precio está aumentando y el volumen también
-                    # # si desde la primera cifra hasta ahora ha incrementado el volumen en x%
-                    # last_volume = df3["volume"].iloc[-1]
-                    # ini_volume = df3["volume"].iloc[0]
-                    # last_price = df3["price"].iloc[-1]
-                    # ini_price = df3["price"].iloc[0]
-                    # if (last_volume > ini_volume) and (last_price > ini_price) and last_volume > 200000:
-                    #     # comprar
-                    #     pass
-
+                    df5.to_csv("csv/"+token+"_relative.csv")
 
         else:
             time.sleep(1)
 
 
 def buyORsell():
-    pass
+    global all_tokens
+    for token in all_tokens:
+        df7 = pd.read_csv("csv/"+token + "_changes.csv", index_col=0)
+        # # si desde la primera cifra hasta ahora ha incrementado el volumen en x%
+        # last_volume = df3["volume"].iloc[-1]
+        # ini_volume = df3["volume"].iloc[0]
+        # last_price = df3["price"].iloc[-1]
+        # ini_price = df3["price"].iloc[0]
+        # if (last_volume > ini_volume) and (last_price > ini_price) and last_volume > 200000:
+
+
 
 
 if __name__ == '__main__':
