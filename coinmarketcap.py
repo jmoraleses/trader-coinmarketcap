@@ -84,52 +84,53 @@ def parseList(broken_html):
     for row in tbody.find_all('tr'):
         # if contador < 1: #
         #     contador += 1
+        try:
 
-        symbol = row.find('p', class_='coin-item-symbol').text
-        img = row.select_one("td > div > img").get('src')
+            img = row.select_one("td > div > img").get('src')
+            if img.find('1839') != -1:
+                symbol = row.find('p', class_='coin-item-symbol').text
+                # price = row.findAll("td")[3].text.replace('$', '').replace('...', '000').replace('.', ',')
+                price_1h_ = row.findAll("td")[4]
+                price_1h = row.findAll("td")[4].text.replace('%', '')#.replace('.', ',')
+                if price_1h_.find("span", class_='icon-Caret-up') is not None:
+                    price_1h_change = 'up'
+                else:
+                    price_1h_change = 'down'
+                price_24h_ = row.findAll("td")[5]
+                price_24h = row.findAll("td")[5].text.replace('%', '')#.replace('.', ',')
+                if price_24h_.find("span", class_='icon-Caret-up') is not None:
+                    price_24h_change = 'up'
+                else:
+                    price_24h_change = 'down'
+                market_cap = row.findAll("td")[6].text.replace('$', '').replace(',', '').replace('--', '0')
+                volume_24h = row.findAll("td")[7].text.replace('$', '').replace(',', '')
+                name = row.find('a', class_='cmc-link').find('p').text
+                url = row.find('a', class_='cmc-link').get('href')
 
-        if img.find('1839') != -1:
-            # price = row.findAll("td")[3].text.replace('$', '').replace('...', '000').replace('.', ',')
-            price_1h_ = row.findAll("td")[4]
-            price_1h = row.findAll("td")[4].text.replace('%', '')#.replace('.', ',')
-            if price_1h_.find("span", class_='icon-Caret-up') is not None:
-                price_1h_change = 'up'
-            else:
-                price_1h_change = 'down'
-            price_24h_ = row.findAll("td")[5]
-            price_24h = row.findAll("td")[5].text.replace('%', '')#.replace('.', ',')
-            if price_24h_.find("span", class_='icon-Caret-up') is not None:
-                price_24h_change = 'up'
-            else:
-                price_24h_change = 'down'
-            market_cap = row.findAll("td")[6].text.replace('$', '').replace(',', '').replace('--', '0')
-            volume_24h = row.findAll("td")[7].text.replace('$', '').replace(',', '')
-            name = row.find('a', class_='cmc-link').find('p').text
-            url = row.find('a', class_='cmc-link').get('href')
+                #data get url for each token
+                token = requestMarketCap("https://coinmarketcap.com" + url)  # +"/historical-data/?start="+time_last_ticker+"&end="+time_now_ticker)
+                url_token, price_token, volume_token = parseToken(token)
 
-            #data get url for each token
-            token = requestMarketCap("https://coinmarketcap.com" + url)  # +"/historical-data/?start="+time_last_ticker+"&end="+time_now_ticker)
-            url_token, price_token, volume_token = parseToken(token)
+                time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
+                data = pd.json_normalize({'time': time_now, 'name': name, 'symbol': symbol, 'price': price_token, 'volume': volume_token,
+                             'price_1h': price_1h, 'price_1h_change': price_1h_change,
+                             'price_24h': price_24h, 'price_24h_change': price_24h_change,
+                             'market_cap': market_cap, 'volume_24h': volume_24h, 'url_token': url_token, 'url': "https://coinmarketcap.com" + url})
 
-            time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
-            data = pd.json_normalize({'time': time_now, 'name': name, 'symbol': symbol, 'price': price_token, 'volume': volume_token,
-                         'price_1h': price_1h, 'price_1h_change': price_1h_change,
-                         'price_24h': price_24h, 'price_24h_change': price_24h_change,
-                         'market_cap': market_cap, 'volume_24h': volume_24h, 'url_token': url_token, 'url': "https://coinmarketcap.com" + url})
+                # si el token no está en la lista, añadir
+                if name not in tokens:
+                    tokens.append(name.replace(' ', '-'))
 
-            # si el token no está en la lista, añadir
-            if name not in tokens:
-                tokens.append(name.replace(' ', '-'))
-
-            filename = 'csv/{}.csv'.format(name.replace(' ', '-'))
-            if os.path.isfile(filename):
-                df = pd.read_csv(filename, index_col=0)
-                df = df.append(data, ignore_index=True)
-                df.to_csv(filename)
-            else:
-                df = pd.DataFrame(data)
-                df.to_csv(filename)
-
+                filename = 'csv/{}.csv'.format(name.replace(' ', '-'))
+                if os.path.isfile(filename):
+                    df = pd.read_csv(filename, index_col=0)
+                    df = df.append(data, ignore_index=True)
+                    df.to_csv(filename)
+                else:
+                    df = pd.DataFrame(data)
+                    df.to_csv(filename)
+        except:
+            pass
         time.sleep(random.randint(3, 5))
         #
 

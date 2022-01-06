@@ -147,3 +147,15 @@ def optuna_search(token):
         print('Token: {}, saldo máximo: {}'.format(token, trial.value))
         print(parametros_optimos)
         print()
+
+
+def optuna():
+    files = os.listdir('/csv/')
+    for file in files:
+        if os.path.isfile(os.path.join('/csv/', file)):
+            token = file.split('.')[0]
+            optuna_search(token)
+
+
+if __name__ == '__main__':
+    optuna()
