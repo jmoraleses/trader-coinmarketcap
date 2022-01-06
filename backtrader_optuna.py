@@ -27,12 +27,11 @@ class Bits(bt.Strategy):
         self.volume_relative_range = self.params.volume_relative_range
         self.percentage = self.params.percentage
         self.datasize = self.params.datasize
-        self.eur = self.broker.getcash() #self.broker.get_value()
-        self.capital = self.eur
         self.contador = 0
         self.breaking = False
         self.buying = False
         self.eur = self.broker.get_value()
+        self.capital = self.eur
         self.volumen_relativo = 0
         self.precio_relativo = 0
         self.coins =0
@@ -44,7 +43,6 @@ class Bits(bt.Strategy):
         self.volumenes = 0
         for self.i in range(self.range -1):
             if self.contador + self.i <= self.datasize -1:
-                # print("{}, {}, {}".format(self.i, self.datasize, self.range))
                 self.precios += self.data.open[self.i] / self.data.open[self.i + 1]
                 self.volumenes += self.data.volume[self.i] / self.data.volume[self.i + 1]
             else:
@@ -68,7 +66,7 @@ class Bits(bt.Strategy):
 
         if self.buying is True:
             self.capital_now = self.data.open[0] * self.coins
-            if (self.capital_now >= self.capital_win and self.buying is True):
+            if (self.capital_now >= self.capital_win and self.buying is True) or self.capital_now <= self.capital:
                 self.order = self.sell(size=self.coins, price=self.data.open[0])
                 self.eur = self.capital_now
                 self.buying = False
@@ -133,7 +131,7 @@ def optuna_search(token):
         )
 
         study = optuna.create_study(direction="maximize")
-        study.optimize(opt_objective, n_trials=10000) # ciclos de optimizacion
+        study.optimize(opt_objective, n_trials=1000) # ciclos de optimizacion
         parametros_optimos = study.best_params
         trial = study.best_trial
         print('Token: {}, saldo máximo: {}'.format(token, trial.value))
