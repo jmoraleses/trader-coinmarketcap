@@ -91,11 +91,11 @@ size = 0
 def opt_objective(trial):
     global data
     global size
-    range = trial.suggest_int('range', 2, 6) #12 = 1hrs
-    price_relative_range = trial.suggest_float('price_relative_range', 0.4, 1.0)
-    volume_relative_range = trial.suggest_float('volume_relative_range', 0.4, 1.0)
-    percentage = trial.suggest_int('percentage', 30, 90)
-    percentage_lost = trial.suggest_int('percentage_lost', 20, 30)
+    range = trial.suggest_int('range', 3, 4) #12 = 1hrs
+    price_relative_range = trial.suggest_float('price_relative_range', 0.70, 0.70)
+    volume_relative_range = trial.suggest_float('volume_relative_range', 0.60, 0.60)
+    percentage = trial.suggest_int('percentage', 15, 20)
+    percentage_lost = trial.suggest_int('percentage_lost', 5, 5)
     datasize = trial.suggest_int('datasize', size, size)
 
     cerebro = bt.Cerebro()
