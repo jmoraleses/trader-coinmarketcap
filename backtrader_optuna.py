@@ -2,12 +2,12 @@ from __future__ import (absolute_import, division, print_function, unicode_liter
 
 import datetime as dt
 import os
-import statistics
+
 import backtrader as bt
 import backtrader.feeds as btfeed
 import optuna as optuna
 import pandas as pd
-import numpy as np
+
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
 
@@ -41,11 +41,11 @@ class Bits(bt.Strategy):
     def average(self):
         self.precios = 0
         self.volumenes = 0
-        for self.i in range(self.range):
-            if self.contador + self.i <= self.datasize:
+        for self.i in range(self.range -1):
+            if self.contador + self.i <= self.datasize -1:
                 # print("{}, {}, {}".format(self.i, self.datasize, self.range))
-                self.precios += self.data.open[self.i]
-                self.volumenes += self.data.volume[self.i]
+                self.precios += self.data.open[self.i] / self.data.open[self.i + 1]
+                self.volumenes += self.data.volume[self.i] / self.data.volume[self.i + 1]
             else:
                 self.breaking = True
                 # self.stop()
@@ -93,9 +93,9 @@ size = 0
 def opt_objective(trial):
     global data
     global size
-    range = trial.suggest_int('range', 1, 24) # 144 = 12hrs #48 = 4hrs
-    price_relative_range = trial.suggest_float('price_relative_range', 0.0, 2.0)
-    volume_relative_range = trial.suggest_float('volume_relative_range', 0.0, 2.0)
+    range = trial.suggest_int('range', 3, 8) # 144 = 12hrs #48 = 4hrs #8 = 40min
+    price_relative_range = trial.suggest_float('price_relative_range', 0.0, 1.0)
+    volume_relative_range = trial.suggest_float('volume_relative_range', 0.0, 1.0)
     percentage = trial.suggest_int('percentage', 50, 90)
     datasize = trial.suggest_int('datasize', size, size)
 
@@ -141,7 +141,7 @@ def optuna_search(token):
         )
 
         study = optuna.create_study(direction="maximize")
-        study.optimize(opt_objective, n_trials=1000) # ciclos de optimizacion
+        study.optimize(opt_objective, n_trials=10000) # ciclos de optimizacion
         parametros_optimos = study.best_params
         trial = study.best_trial
         print('Token: {}, saldo máximo: {}'.format(token, trial.value))
@@ -149,13 +149,10 @@ def optuna_search(token):
         print()
 
 
-def optuna():
-    files = os.listdir('/csv/')
-    for file in files:
-        if os.path.isfile(os.path.join('/csv/', file)):
-            token = file.split('.')[0]
-            optuna_search(token)
-
 
 if __name__ == '__main__':
-    optuna()
+    files = os.listdir('csv/')
+    for file in files:
+        if os.path.isfile(os.path.join('csv/', file)):
+            token = file.split('.')[0]
+            optuna_search(token)

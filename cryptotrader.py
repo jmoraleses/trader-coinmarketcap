@@ -134,11 +134,11 @@ def buyORsell():
 
 
 
-def optuna():
-    time.sleep(300)
-    global all_tokens
-    for token in all_tokens:
-        backtrader_optuna.optuna_search(token)
+# def optuna():
+#     time.sleep(300)
+#     global all_tokens
+#     for token in all_tokens:
+#         backtrader_optuna.optuna_search(token)
 
 
 if __name__ == '__main__':
