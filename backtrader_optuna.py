@@ -18,6 +18,7 @@ class Bits(bt.Strategy):
         ('price_relative_range', 1),
         ('volume_relative_range', 1),
         ('percentage', 1),
+        ('percentage_lost', 1),
         ('datasize', 1),
     )
 
@@ -26,6 +27,7 @@ class Bits(bt.Strategy):
         self.price_relative_range = self.params.price_relative_range
         self.volume_relative_range = self.params.volume_relative_range
         self.percentage = self.params.percentage
+        self.percentage_lost = self.params.percentage_lost
         self.datasize = self.params.datasize
         self.contador = 0
         self.breaking = False
@@ -64,7 +66,7 @@ class Bits(bt.Strategy):
             self.order = self.buy(size=self.coins, price=self.data.open[0])
             self.buying = True
             self.capital_win = self.capital + (self.capital * (self.percentage / 100))
-            self.capital_lost = self.capital + (self.capital * (10 / 100))
+            self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
 
         if self.buying is True:
             self.capital_now = self.data.open[0] * self.coins
@@ -75,9 +77,9 @@ class Bits(bt.Strategy):
 
     def stop(self):
         # if self.breaking is True:
-        pass
+        # pass
         # else:
-        # self.order = self.close()
+        self.order = self.close()
         # print(self.capital_now)
         # print('value: {}, cash: {}'.format(str(self.broker.get_value()), str(self.broker.get_cash())))
 
@@ -89,6 +91,7 @@ def opt_objective(trial):
     price_relative_range = trial.suggest_float('price_relative_range', 0.0, 1.0)
     volume_relative_range = trial.suggest_float('volume_relative_range', 0.0, 1.0)
     percentage = trial.suggest_int('percentage', 30, 90)
+    percentage_lost = trial.suggest_int('percentage_lost', 5, 50)
     datasize = trial.suggest_int('datasize', size, size)
 
     cerebro = bt.Cerebro()
@@ -97,7 +100,7 @@ def opt_objective(trial):
     cerebro.broker.setcash(cash=100.0) # 100€
     # cerebro.addwriter(bt.WriterFile, out='analisis.txt')
     # cerebro.addanalyzer(bt.analyzers.PyFolio, _name='pyfolio')
-    cerebro.addstrategy(Bits, range=range, price_relative_range=price_relative_range, volume_relative_range=volume_relative_range, percentage=percentage, datasize=datasize)
+    cerebro.addstrategy(Bits, range=range, price_relative_range=price_relative_range, volume_relative_range=volume_relative_range, percentage=percentage, percentage_lost=percentage_lost, datasize=datasize)
     cerebro.adddata(data)
     cerebro.run()
 
@@ -133,7 +136,7 @@ def optuna_search(token):
         )
 
         study = optuna.create_study(direction="maximize")
-        study.optimize(opt_objective, n_trials=1000) # ciclos de optimizacion
+        study.optimize(opt_objective, n_trials=10000) # ciclos de optimizacion
         parametros_optimos = study.best_params
         trial = study.best_trial
         print('Token: {}, saldo máximo: {}'.format(token, trial.value))
@@ -144,7 +147,8 @@ def optuna_search(token):
 
 if __name__ == '__main__':
     files = os.listdir('csv/')
-    for file in files:
-        if os.path.isfile(os.path.join('csv/', file)):
-            token = file.split('.')[0]
-            optuna_search(token)
+    # for file in files:
+    #     if os.path.isfile(os.path.join('csv/', file)):
+    #         token = file.split('.')[0]
+    #         optuna_search(token)
+    optuna_search("Metaland-DAO")
