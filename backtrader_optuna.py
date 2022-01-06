@@ -87,11 +87,11 @@ size = 0
 def opt_objective(trial):
     global data
     global size
-    range = trial.suggest_int('range', 2, 12) # 144 = 12hrs #48 = 4hrs #8 = 40min
-    price_relative_range = trial.suggest_float('price_relative_range', 0.0, 1.0)
-    volume_relative_range = trial.suggest_float('volume_relative_range', 0.0, 1.0)
+    range = trial.suggest_int('range', 2, 8) #8 = 40min
+    price_relative_range = trial.suggest_float('price_relative_range', 0.4, 1.0)
+    volume_relative_range = trial.suggest_float('volume_relative_range', 0.4, 1.0)
     percentage = trial.suggest_int('percentage', 30, 90)
-    percentage_lost = trial.suggest_int('percentage_lost', 5, 50)
+    percentage_lost = trial.suggest_int('percentage_lost', 20, 50)
     datasize = trial.suggest_int('datasize', size, size)
 
     cerebro = bt.Cerebro()
@@ -136,7 +136,7 @@ def optuna_search(token):
         )
 
         study = optuna.create_study(direction="maximize")
-        study.optimize(opt_objective, n_trials=10000) # ciclos de optimizacion
+        study.optimize(opt_objective, n_trials=2000) # ciclos de optimizacion
         parametros_optimos = study.best_params
         trial = study.best_trial
         print('Token: {}, saldo máximo: {}'.format(token, trial.value))
@@ -147,8 +147,8 @@ def optuna_search(token):
 
 if __name__ == '__main__':
     files = os.listdir('csv/')
-    # for file in files:
-    #     if os.path.isfile(os.path.join('csv/', file)):
-    #         token = file.split('.')[0]
-    #         optuna_search(token)
-    optuna_search("Metaland-DAO")
+    for file in files:
+        if os.path.isfile(os.path.join('csv/', file)):
+            token = file.split('.')[0]
+            optuna_search(token)
+    # optuna_search("Metaland-DAO")
