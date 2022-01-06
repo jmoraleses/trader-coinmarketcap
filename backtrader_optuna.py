@@ -37,6 +37,7 @@ class Bits(bt.Strategy):
         self.coins =0
         self.capital_win = 0
         self.capital_now = 0
+        self.capital_loss = 0
 
     def average(self):
         self.precios = 0
@@ -63,10 +64,11 @@ class Bits(bt.Strategy):
             self.order = self.buy(size=self.coins, price=self.data.open[0])
             self.buying = True
             self.capital_win = self.capital + (self.capital * (self.percentage / 100))
+            self.capital_lost = self.capital + (self.capital * (10 / 100))
 
         if self.buying is True:
             self.capital_now = self.data.open[0] * self.coins
-            if (self.capital_now >= self.capital_win and self.buying is True) or self.capital_now <= self.capital:
+            if (self.capital_now >= self.capital_win and self.buying is True) or self.capital_now < self.capital_lost:
                 self.order = self.sell(size=self.coins, price=self.data.open[0])
                 self.eur = self.capital_now
                 self.buying = False
