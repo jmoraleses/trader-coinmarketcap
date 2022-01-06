@@ -68,7 +68,7 @@ class Bits(bt.Strategy):
 
         if self.buying is True:
             self.capital_now = self.data.open[0] * self.coins
-            if (self.capital_now >= self.capital_win and self.buying is True) or self.capital_now < self.capital_lost:
+            if self.capital_now >= self.capital_win or self.capital_now < self.capital_lost:
                 self.order = self.sell(size=self.coins, price=self.data.open[0])
                 self.eur = self.capital_now
                 self.buying = False
