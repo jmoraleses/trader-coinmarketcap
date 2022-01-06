@@ -45,8 +45,8 @@ class Bits(bt.Strategy):
     def average(self):
         self.precios = 0
         self.volumenes = 0
-        for self.i in range(self.range -1):
-            if self.contador + self.i <= self.datasize -1:
+        for self.i in range(self.range - 1):
+            if self.contador + self.i <= self.datasize - 1:
                 self.precios += self.data.open[self.i] / self.data.open[self.i + 1]
                 self.volumenes += self.data.volume[self.i] / self.data.volume[self.i + 1]
             else:
@@ -58,26 +58,30 @@ class Bits(bt.Strategy):
         self.contador += 1
 
     def next(self):
+
         if not self.breaking:
             self.average()
 
-        if (self.precio_relativo >= self.price_relative_range) and (self.volumen_relativo >= self.volume_relative_range) and self.buying is False:
-            self.capital = self.eur
-            self.coins = self.capital / self.data.open[0]
-            self.order = self.buy(size=self.coins, price=self.data.open[0])
-            self.buying = True
-            self.capital_win = self.capital + (self.capital * (self.percentage / 100))
-            self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
+        if self.data.volume[0] > 700000:
 
-        if self.buying is True:
-            self.capital_now = self.data.open[0] * self.coins
-            if self.capital_now > self.capital_before:
-                self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
-            if self.capital_now >= self.capital_win or self.capital_now < self.capital_lost:
-                self.order = self.sell(size=self.coins, price=self.data.open[0])
-                self.eur = self.capital_now
-                self.buying = False
-            self.capital_before = self.capital_now
+            if (self.precio_relativo >= self.price_relative_range) and (self.volumen_relativo >= self.volume_relative_range) and self.buying is False:
+                self.capital = self.eur
+                self.coins = self.capital / self.data.open[0]
+                self.order = self.buy(size=self.coins, price=self.data.open[0])
+                self.buying = True
+                self.capital_win = self.capital + (self.capital * (self.percentage / 100))
+                self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
+
+            if self.buying is True:
+                self.capital_now = self.data.open[0] * self.coins
+                if self.capital_now > self.capital_before:
+                    self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
+                # if self.capital_now >= self.capital_win or self.capital_now < self.capital_lost:
+                if self.capital_now < self.capital_lost:
+                    self.order = self.sell(size=self.coins, price=self.data.open[0])
+                    self.eur = self.capital_now
+                    self.buying = False
+                self.capital_before = self.capital_now
 
     def stop(self):
         # if self.breaking is True:
@@ -91,11 +95,11 @@ size = 0
 def opt_objective(trial):
     global data
     global size
-    range = trial.suggest_int('range', 3, 4) #12 = 1hrs
-    price_relative_range = trial.suggest_float('price_relative_range', 0.70, 0.70)
-    volume_relative_range = trial.suggest_float('volume_relative_range', 0.60, 0.60)
-    percentage = trial.suggest_int('percentage', 15, 20)
-    percentage_lost = trial.suggest_int('percentage_lost', 5, 5)
+    range = trial.suggest_int('range', 8, 8) #12 = 1hrs
+    price_relative_range = trial.suggest_float('price_relative_range', 0.80, 0.80)
+    volume_relative_range = trial.suggest_float('volume_relative_range', 0.85, 0.85)
+    percentage = trial.suggest_int('percentage', 180, 180)
+    percentage_lost = trial.suggest_int('percentage_lost', 35, 35)
     datasize = trial.suggest_int('datasize', size, size)
 
     cerebro = bt.Cerebro()
@@ -140,7 +144,7 @@ def optuna_search(token):
         )
 
         study = optuna.create_study(direction="maximize")
-        study.optimize(opt_objective, n_trials=1000) # ciclos de optimizacion
+        study.optimize(opt_objective, n_trials=100) # ciclos de optimizacion
         parametros_optimos = study.best_params
         trial = study.best_trial
         print('Token: {}, saldo máximo: {}'.format(token, trial.value))
