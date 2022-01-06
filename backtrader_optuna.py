@@ -27,16 +27,17 @@ class Bits(bt.Strategy):
         self.volume_relative_range = self.params.volume_relative_range
         self.percentage = self.params.percentage
         self.datasize = self.params.datasize
-        # self.begin = False
         self.eur = self.broker.getcash() #self.broker.get_value()
         self.capital = self.eur
-        # self.contador_max = abs(self.datasize - self.range)
         self.contador = 0
         self.breaking = False
         self.buying = False
-
+        self.eur = self.broker.get_value()
         self.volumen_relativo = 0
         self.precio_relativo = 0
+        self.coins =0
+        self.capital_win = 0
+        self.capital_now = 0
 
     def average(self):
         self.precios = 0
@@ -54,49 +55,40 @@ class Bits(bt.Strategy):
         self.precio_relativo = self.precios / self.range
         self.contador += 1
 
-
-
     def next(self):
         if not self.breaking:
             self.average()
 
-        # print(self.precio_relativo)
-        # print(self.volumen_relativo)
-
         if (self.precio_relativo >= self.price_relative_range) and (self.volumen_relativo >= self.volume_relative_range) and self.buying is False:
-            self.capital = self.broker.get_value()
-            # self.y = self.broker.get_value() / self.data.open[0]
-            # self.order = self.buy(size=self.y, price=self.data.open[0])
-            self.order = self.buy()
+            self.capital = self.eur
+            self.coins = self.capital / self.data.open[0]
+            self.order = self.buy(size=self.coins, price=self.data.open[0])
             self.buying = True
+            self.capital_win = self.capital + (self.capital * (self.percentage / 100))
 
-        self.capital_now = self.capital + (self.capital * (self.percentage / 100))
-
-        if (self.capital*self.precio_relativo >= self.capital_now):
-            # self.y = self.broker.get_value() / self.data.open[0]
-            # self.order = self.sell(size=self.y, price=self.data.open[0])
-            # self.order = self.sell()
-            self.order = self.close()
-            self.buying = False
-
+        if self.buying is True:
+            self.capital_now = self.data.open[0] * self.coins
+            if (self.capital_now >= self.capital_win and self.buying is True):
+                self.order = self.sell(size=self.coins, price=self.data.open[0])
+                self.eur = self.capital_now
+                self.buying = False
 
     def stop(self):
         # if self.breaking is True:
-        #     pass
+        pass
         # else:
-        self.order = self.close()
+        # self.order = self.close()
+        # print(self.capital_now)
         # print('value: {}, cash: {}'.format(str(self.broker.get_value()), str(self.broker.get_cash())))
-        # print('posiciones: {}, price_relative_range: {}, volume_relative_range: {}, percentage de ganancias: {}\n'.format(self.range, self.price_relative_range, self.volume_relative_range, self.percentage))
-
 
 size = 0
 def opt_objective(trial):
     global data
     global size
-    range = trial.suggest_int('range', 3, 8) # 144 = 12hrs #48 = 4hrs #8 = 40min
+    range = trial.suggest_int('range', 2, 12) # 144 = 12hrs #48 = 4hrs #8 = 40min
     price_relative_range = trial.suggest_float('price_relative_range', 0.0, 1.0)
     volume_relative_range = trial.suggest_float('volume_relative_range', 0.0, 1.0)
-    percentage = trial.suggest_int('percentage', 50, 90)
+    percentage = trial.suggest_int('percentage', 30, 90)
     datasize = trial.suggest_int('datasize', size, size)
 
     cerebro = bt.Cerebro()
