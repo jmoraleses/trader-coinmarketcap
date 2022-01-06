@@ -70,6 +70,8 @@ class Bits(bt.Strategy):
 
         if self.buying is True:
             self.capital_now = self.data.open[0] * self.coins
+            if self.capital_now > self.capital:
+                self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
             if self.capital_now >= self.capital_win or self.capital_now < self.capital_lost:
                 self.order = self.sell(size=self.coins, price=self.data.open[0])
                 self.eur = self.capital_now
@@ -77,9 +79,9 @@ class Bits(bt.Strategy):
 
     def stop(self):
         # if self.breaking is True:
-        # pass
+        pass
         # else:
-        self.order = self.close()
+        # self.order = self.close()
         # print(self.capital_now)
         # print('value: {}, cash: {}'.format(str(self.broker.get_value()), str(self.broker.get_cash())))
 
@@ -87,11 +89,11 @@ size = 0
 def opt_objective(trial):
     global data
     global size
-    range = trial.suggest_int('range', 2, 8) #8 = 40min
+    range = trial.suggest_int('range', 2, 6) #12 = 1hrs
     price_relative_range = trial.suggest_float('price_relative_range', 0.4, 1.0)
     volume_relative_range = trial.suggest_float('volume_relative_range', 0.4, 1.0)
     percentage = trial.suggest_int('percentage', 30, 90)
-    percentage_lost = trial.suggest_int('percentage_lost', 20, 50)
+    percentage_lost = trial.suggest_int('percentage_lost', 20, 30)
     datasize = trial.suggest_int('datasize', size, size)
 
     cerebro = bt.Cerebro()
@@ -136,7 +138,7 @@ def optuna_search(token):
         )
 
         study = optuna.create_study(direction="maximize")
-        study.optimize(opt_objective, n_trials=2000) # ciclos de optimizacion
+        study.optimize(opt_objective, n_trials=1000) # ciclos de optimizacion
         parametros_optimos = study.best_params
         trial = study.best_trial
         print('Token: {}, saldo máximo: {}'.format(token, trial.value))
