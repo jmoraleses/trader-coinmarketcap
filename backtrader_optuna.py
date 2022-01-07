@@ -89,7 +89,7 @@ def opt_objective(trial):
     global size
     global volume_ini
     range = trial.suggest_int('range', 10, 10) #12 = 1hrs
-    price_relative_range = trial.suggest_float('price_relative_range', 1.0, 1.0)
+    price_relative_range = trial.suggest_float('price_relative_range', 0.85, 0.85)
     volume_relative_range = trial.suggest_float('volume_relative_range', 1.0, 1.0)
     percentage = trial.suggest_int('percentage', 250, 250)
     percentage_lost = trial.suggest_float('percentage_lost', 35, 35)
