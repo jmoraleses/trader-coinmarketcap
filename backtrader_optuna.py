@@ -69,10 +69,11 @@ class Bits(bt.Strategy):
                         # self.order = self.close()
                         self.eur = self.capital_now
                         self.buying = False
-                        self.stop()
+                        # self.stop()
                     self.capital_before = self.capital_now
 
         self.contador += 1
+
 
     def stop(self):
         pass
@@ -137,7 +138,7 @@ def optuna_search(token):
         )
 
         study = optuna.create_study(direction="maximize")
-        study.optimize(opt_objective, n_trials=100) # ciclos de optimizacion
+        study.optimize(opt_objective, n_trials=1) # ciclos de optimizacion
         parametros_optimos = study.best_params
         trial = study.best_trial
         print('Token: {}, saldo máximo: {}'.format(token, trial.value))
