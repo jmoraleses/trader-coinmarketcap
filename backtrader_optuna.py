@@ -50,7 +50,7 @@ class Bits(bt.Strategy):
             self.precio_relativo = self.data.open / self.data.open[+self.range]
             self.volumen_relativo = self.data.volume / self.data.volume[+self.range]
 
-            if True is True: #self.data.volume[0] < 100000:
+            if True: #self.data.volume > 30000:
 
                 if (self.precio_relativo <= self.price_relative_range) and (self.volumen_relativo <= self.volume_relative_range) and self.buying is False:
                     self.capital = self.eur
