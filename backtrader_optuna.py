@@ -71,7 +71,7 @@ class Bits(bt.Strategy):
                         # self.order = self.close()
                         self.eur = self.capital_now
                         # self.buying = False
-                        # self.stop()
+                        self.stop()
                     self.capital_before = self.capital_now
 
         self.contador += 1
