@@ -21,6 +21,7 @@ class Bits(bt.Strategy):
         ('percentage', 1),
         ('percentage_lost', 1),
         ('datasize', 1),
+        ('volume_ini', 1),
     )
 
     def __init__(self):
@@ -44,7 +45,7 @@ class Bits(bt.Strategy):
         self.capital_loss = 0
         self.capital_before = 0
         self.i = 0
-        self.volume_ini = self.data.volume[0]
+        self.volume_ini = self.params.volume_ini
 
     def next(self):
 
@@ -52,7 +53,7 @@ class Bits(bt.Strategy):
             self.precio_relativo = self.data.open[-self.range] / self.data.open
             self.volumen_relativo = self.data.volume[-self.range] / self.data.volume
 
-            if self.volume_ini < 850000 and self.volume_ini > 300000:
+            if self.volume_ini < 700000 and self.volume_ini > 300000:
 
                 if (self.precio_relativo >= self.price_relative_range_min and self.precio_relativo <= self.price_relative_range) and (self.volumen_relativo <= self.volume_relative_range) and self.buying is False:
                     self.capital = self.eur
@@ -91,13 +92,15 @@ size = 0
 def opt_objective(trial):
     global data
     global size
+    global volume_ini
     range = trial.suggest_int('range', 4, 4) #12 = 1hrs
     price_relative_range = trial.suggest_float('price_relative_range', 0.85, 0.85)
-    price_relative_range_min = trial.suggest_float('price_relative_range_min', 0.20, 0.20)
+    price_relative_range_min = trial.suggest_float('price_relative_range_min', 0.50, 0.50)
     volume_relative_range = trial.suggest_float('volume_relative_range', 1.0, 1.0)
     percentage = trial.suggest_int('percentage', 1500, 1500)
-    percentage_lost = trial.suggest_int('percentage_lost', 2, 2)
+    percentage_lost = trial.suggest_float('percentage_lost', 0.1, 0.1)
     datasize = trial.suggest_int('datasize', size, size)
+    volume_ini = trial.suggest_int('volume_ini', volume_ini, volume_ini)
 
     cerebro = bt.Cerebro()
     cerebro.broker.set_coc(True)
@@ -105,7 +108,7 @@ def opt_objective(trial):
     cerebro.broker.setcash(cash=100.0) # 100€
     # cerebro.addwriter(bt.WriterFile, out='analisis.txt')
     # cerebro.addanalyzer(bt.analyzers.PyFolio, _name='pyfolio')
-    cerebro.addstrategy(Bits, range=range, price_relative_range=price_relative_range, price_relative_range_min=price_relative_range_min, volume_relative_range=volume_relative_range, percentage=percentage, percentage_lost=percentage_lost, datasize=datasize)
+    cerebro.addstrategy(Bits, range=range, price_relative_range=price_relative_range, price_relative_range_min=price_relative_range_min, volume_relative_range=volume_relative_range, percentage=percentage, percentage_lost=percentage_lost, datasize=datasize, volume_ini=volume_ini)
     cerebro.adddata(data)
     cerebro.run()
     # print('value: {}, cash: {}'.format(cerebro.broker.get_value(), cerebro.broker.get_cash()))
@@ -115,11 +118,13 @@ def opt_objective(trial):
 def optuna_search(token):
     global data
     global size
+    global volume_ini
     filename = "csv/" + token + ".csv"
     time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
 
     if os.path.isfile(filename):
         df = pd.read_csv(filename, index_col=0)
+        volume_ini = df['volume'].iloc[0].astype(float)
         size = df.index.max()
         time_ini = dt.datetime.strptime(df['time'].iloc[0], '%Y-%m-%d %H:%M:%S')
         data = btfeed.GenericCSVData(
