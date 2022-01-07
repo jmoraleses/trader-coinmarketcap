@@ -32,6 +32,7 @@ class Bits(bt.Strategy):
         self.percentage = self.params.percentage
         self.percentage_lost = self.params.percentage_lost
         self.datasize = self.params.datasize
+        self.volume_ini = self.params.volume_ini
         self.contador = 0
         self.breaking = False
         self.buying = False
@@ -45,7 +46,7 @@ class Bits(bt.Strategy):
         self.capital_loss = 0
         self.capital_before = 0
         self.i = 0
-        self.volume_ini = self.params.volume_ini
+
 
     def next(self):
 
