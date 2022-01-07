@@ -54,26 +54,29 @@ class Bits(bt.Strategy):
             self.precio_relativo = self.data.open[-self.range] / self.data.open
             self.volumen_relativo = self.data.volume[-self.range] / self.data.volume
 
-            if self.volume_ini < 700000 and self.volume_ini > 300000:
+            if self.volume_ini > 1500000 and self.volume_ini < 3000000: # and self.volume_ini < 1000000: #self.volume_ini < 700000: # and self.volume_ini > 400000:
 
-                if (self.precio_relativo >= self.price_relative_range_min and self.precio_relativo <= self.price_relative_range) and (self.volumen_relativo <= self.volume_relative_range) and self.buying is False:
+                if ( self.precio_relativo <= self.price_relative_range) and (self.volumen_relativo <= self.volume_relative_range) and self.buying is False:
+                # if (self.precio_relativo >= self.price_relative_range_min and self.precio_relativo <= self.price_relative_range) and (self.volumen_relativo <= self.volume_relative_range) and self.buying is False:
                     self.capital = self.eur
-                    self.coins = self.capital / self.data.open
-                    self.order = self.buy(size=self.coins, price=self.data.open)
+                    self.coins = self.capital / self.data.open[0]
+                    self.order = self.buy(size=self.coins, price=self.data.open[0])
                     self.buying = True
                     self.capital_win = self.capital + (self.capital * (self.percentage / 100))
                     self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
 
                 if self.buying is True:
-                    self.capital_now = self.data.open * self.coins
+                    self.capital_now = self.data.open[0] * self.coins
                     if self.capital_now > self.capital_before:
                         self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
-                    if self.capital_now >= self.capital_win or self.capital_now < self.capital_lost:
-                        self.order = self.sell(size=self.coins, price=self.data.open)
-                        # self.order = self.close()
+                    # print(self.data.volume[0])
+                    if self.capital_now >= self.capital_win or self.capital_now < self.capital_lost: # or self.data.volume[0] > 400000:
+                        # self.order = self.sell(size=self.coins, price=self.data.open)
+                        self.order = self.close()
                         self.eur = self.capital_now
-                        # self.buying = False
-                        self.stop()
+                        # self.buying = False #
+                        # self.stop()
+                        # return
                     self.capital_before = self.capital_now
 
         self.contador += 1
@@ -84,8 +87,8 @@ class Bits(bt.Strategy):
         # if self.breaking is True:
         # return self.capital_now
         # else:
-        # self.order = self.close()
-        # print(self.capital_now)
+        self.order = self.close()
+        # print(self.eur)
         # print('value: {}, cash: {}'.format(str(self.broker.get_value()), str(self.broker.get_cash())))
 
 
@@ -95,11 +98,11 @@ def opt_objective(trial):
     global size
     global volume_ini
     range = trial.suggest_int('range', 4, 4) #12 = 1hrs
-    price_relative_range = trial.suggest_float('price_relative_range', 0.85, 0.85)
-    price_relative_range_min = trial.suggest_float('price_relative_range_min', 0.50, 0.50)
+    price_relative_range = trial.suggest_float('price_relative_range', 0.80, 0.80)
+    price_relative_range_min = trial.suggest_float('price_relative_range_min', 0.10, 0.10)
     volume_relative_range = trial.suggest_float('volume_relative_range', 1.0, 1.0)
-    percentage = trial.suggest_int('percentage', 1500, 1500)
-    percentage_lost = trial.suggest_float('percentage_lost', 0.1, 0.1)
+    percentage = trial.suggest_int('percentage', 400, 400)
+    percentage_lost = trial.suggest_float('percentage_lost', 250, 250)
     datasize = trial.suggest_int('datasize', size, size)
     volume_ini = trial.suggest_int('volume_ini', volume_ini, volume_ini)
 
@@ -112,6 +115,7 @@ def opt_objective(trial):
     cerebro.addstrategy(Bits, range=range, price_relative_range=price_relative_range, price_relative_range_min=price_relative_range_min, volume_relative_range=volume_relative_range, percentage=percentage, percentage_lost=percentage_lost, datasize=datasize, volume_ini=volume_ini)
     cerebro.adddata(data)
     cerebro.run()
+    # cerebro.plot()
     # print('value: {}, cash: {}'.format(cerebro.broker.get_value(), cerebro.broker.get_cash()))
     return float(cerebro.broker.get_value())
 
@@ -157,9 +161,11 @@ def optuna_search(token):
 
 
 if __name__ == '__main__':
-    files = os.listdir('csv/')
-    for file in files:
-        if os.path.isfile(os.path.join('csv/', file)):
-            token = file.split('.')[0]
-            optuna_search(token)
-    # optuna_search("Metaland-DAO")
+    # files = os.listdir('csv/')
+    # for file in files:
+    #     if os.path.isfile(os.path.join('csv/', file)):
+    #         token = file.split('.')[0]
+    #         optuna_search(token)
+    # optuna_search("Crypto-Arcade-Punk")
+    # optuna_search("Multistarter")
+    optuna_search("Metaland-DAO")
