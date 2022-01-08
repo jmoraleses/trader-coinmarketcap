@@ -41,6 +41,7 @@ class Bits(object):
         self.capital_now = 0
         self.capital_loss = 0
         self.capital_before = 0
+        self.precio_relativo_n = 0
         self.i = 0
         self.buying = False
         self.finish = False
@@ -49,42 +50,40 @@ class Bits(object):
         print(self.datasize)
 
     def execute(self):
-        print("espera")
-        time.sleep(300)
-        if True is False:
-            if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
-                ###
-                if 0 <= self.contador - self.range < self.datasize:
-                    self.precio_relativo = self.data.open[-self.range] / self.data.open[self.contador]
-                    self.volumen_relativo = self.data.volume[-self.range] / self.data.volume[self.contador]
+        ###
+        if 0 <= self.contador - self.range < self.datasize and self.contador <= self.datasize: #<=
+            self.precio_relativo = self.data.open[self.contador-self.range] / self.data.open[self.contador]
+            self.volumen_relativo = self.data.volume[self.contador-self.range] / self.data.volume[self.contador]
 
-                    if 500000 < self.volume_ini < 3000000 and self.finish is False:
-                        if self.precio_relativo <= self.price_relative_range and self.volumen_relativo <= self.volume_relative_range and self.buying is False:
-                            self.coins = self.capital / self.data.open[self.contador]
-                            self.buying = True
-                            self.capital_win = self.capital + (self.capital * (self.percentage / 100))
-                            self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
-                            # call buy
-                            print("buy")
-                            #
+            if 500000 < self.volume_ini < 3000000 and self.finish is False:
+                if self.precio_relativo <= self.price_relative_range and self.volumen_relativo <= self.volume_relative_range and self.buying is False:
+                    self.coins = self.capital / self.data.open[self.contador]
+                    self.buying = True
+                    self.capital_win = self.capital + (self.capital * (self.percentage / 100))
+                    self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
+                    # call buy
+                    print("buy")
+                    return
+                    #
 
-                        if self.buying is True:
+                if self.buying is True:
 
-                            self.precio_relativo_n = self.data.open[self.precio_relativo_num] / self.data.open
-                            self.capital_now = self.data.open * self.coins
+                    self.precio_relativo_n = self.data.open[self.contador-self.precio_relativo_num] / self.data.open
+                    self.capital_now = self.data.open * self.coins
 
-                            # if self.capital_now > self.capital_before:
-                            #     self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
-                            # self.capital_before = self.capital_now
+                    # if self.capital_now > self.capital_before:
+                    #     self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
+                    # self.capital_before = self.capital_now
 
-                            if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win:
-                                self.finish = True
-                                # call sell
-                                print("sell")
-                                #
+                    if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win:
+                        self.finish = True
+                        # call sell
+                        print("sell")
+                        return
+                        #
 
-                self.contador += 1
-                ###
+        self.contador += 1
+        ###
 
 process = []
 def cancell_operations(signum, frame):
@@ -93,7 +92,7 @@ def cancell_operations(signum, frame):
     #
 
     #
-    exit(0)
+    sys.exit(0)
 
 
 
@@ -101,19 +100,19 @@ def cancell_operations(signum, frame):
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, cancell_operations)
 
-    time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
-    if True:
+    # time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
+    while True:
+        if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
+            i = 0
+            files = os.listdir('csv/')
+            data = []
+            for file in files:
+                if os.path.isfile(os.path.join('csv/', file)):
+                    data.append(pd.read_csv("csv/" + file, index_col=0))
+                    process.append(Process(target=Bits, args=(data[i],)))
+                    i += 1
 
-        i = 0
-        files = os.listdir('csv/')
-        data = []
-        for file in files:
-            if os.path.isfile(os.path.join('csv/', file)):
-                data.append(pd.read_csv("csv/" + file, index_col=0))
-                process.append(Process(target=Bits, args=(data[i],)))
-                i += 1
-
-        for i in range(len(process)):
-            process[i].start()
-        for i in range(len(files)):
-            process[i].join()
+            for i in range(len(process)):
+                process[i].start()
+            for i in range(len(files)):
+                process[i].join()
