@@ -16,8 +16,7 @@ class Bits(object):
     #     ('precio_relativo_num', -2),
     # )
 
-    def __init__(self, df, token):
-        self.data = data
+    def __init__(self, *args, **kwargs):
         self.range = 7
         self.price_relative_range = 0.85
         self.volume_relative_range = 1.0
@@ -25,9 +24,6 @@ class Bits(object):
         self.percentage_lost = 35
         self.precio_relativo_negativo = 1.4
         self.precio_relativo_num = -2
-        self.datasize = df.index.max()
-        self.volume_ini = df['volume'].iloc[0].astype(float)
-        self.contador = -1  # last position
         self.volumen_relativo = 0
         self.precio_relativo = 0
         self.coins = 0
@@ -42,17 +38,22 @@ class Bits(object):
         self.finish = False
         self.eur = 100.0  ###
         self.capital = self.eur
+
+    def trading(self, df, token):
+
+        self.data = df
+        self.datasize = df.index.max()
+        self.volume_ini = df.iloc[0]['volume'].astype(float)
         self.token = token
 
-    def execute(self):
-        ###
-        if 0 <= self.contador - self.range < self.datasize and self.contador <= self.datasize:  # <=
-            self.precio_relativo = self.data.open[self.contador - self.range] / self.data.open[self.contador]
-            self.volumen_relativo = self.data.volume[self.contador - self.range] / self.data.volume[self.contador]
+        if self.data.index.max() >= self.range:
+
+            self.precio_relativo = self.data.iloc[-1 - self.range]['price'] / self.data.iloc[-1]['price']
+            self.volumen_relativo = self.data.iloc[-1 - self.range]['volume'] / self.data.iloc[-1]['volume']
 
             if 500000 < self.volume_ini < 3000000 and self.finish is False:
                 if self.precio_relativo <= self.price_relative_range and self.volumen_relativo <= self.volume_relative_range and self.buying is False:
-                    self.coins = self.capital / self.data.open[self.contador]
+                    self.coins = self.capital / self.data.iloc[-1]['price']
                     self.buying = True
                     self.capital_win = self.capital + (self.capital * (self.percentage / 100))
                     self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
@@ -62,8 +63,9 @@ class Bits(object):
                     #
 
                 if self.buying is True:
-                    self.precio_relativo_n = self.data.open[self.contador - self.precio_relativo_num] / self.data.open
-                    self.capital_now = self.data.open * self.coins
+                    self.precio_relativo_n = self.data.iloc[-1 - self.precio_relativo_num]['price'] / \
+                                             self.data.iloc[-1]['price']
+                    self.capital_now = self.data.iloc[-1]['price'] * self.coins
 
                     # if self.capital_now > self.capital_before:
                     #     self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
@@ -77,22 +79,27 @@ class Bits(object):
                         #
         ###
 
+    def run(self):
+        while True:
+            # if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
+            if True:
+                i = 0
+                data = []
+                processes = []
+                files = os.listdir('csv/')
+                for file in files:
+                    if os.path.isfile(os.path.join('csv/', file)):
+                        data.append(pd.read_csv("csv/" + file, index_col=0))
+                        processes.append(Process(target=self.trading, args=(data[i], file,)))
+                        i += 1
+
+                print("start")
+                [x.start() for x in processes]
+                # [x.join() for x in processes]
+
 
 if __name__ == '__main__':
-    # time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
-    while True:
-        if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
-            i = 0
-            data = []
-            process = []
-            files = os.listdir('csv/')
-            for file in files:
-                if os.path.isfile(os.path.join('csv/', file)):
-                    data.append(pd.read_csv("csv/" + file, index_col=0))
-                    process.append(Process(target=Bits, args=(data[i], file, )))
-                    i += 1
-
-            for i in range(len(process)):
-                process[i].start()
-            for i in range(len(files)):
-                process[i].join()
+    time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
+    print(time_now)
+    process = Bits()
+    process.run()
