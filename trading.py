@@ -33,7 +33,7 @@ class Bits(object):
         self.precio_relativo_num = -2
         self.datasize = data.index.max()
         self.volume_ini = data['volume'].iloc[0].astype(float)
-        self.contador = 0
+        self.contador = -1  # last position
         self.volumen_relativo = 0
         self.precio_relativo = 0
         self.coins = 0
@@ -48,13 +48,12 @@ class Bits(object):
         self.finish = False
         self.eur = 100.0  ###
         self.capital = self.eur
-        print(self.datasize)
 
     def execute(self):
         ###
-        if 0 <= self.contador - self.range < self.datasize and self.contador <= self.datasize: #<=
-            self.precio_relativo = self.data.open[self.contador-self.range] / self.data.open[self.contador]
-            self.volumen_relativo = self.data.volume[self.contador-self.range] / self.data.volume[self.contador]
+        if 0 <= self.contador - self.range < self.datasize and self.contador <= self.datasize:  # <=
+            self.precio_relativo = self.data.open[self.contador - self.range] / self.data.open[self.contador]
+            self.volumen_relativo = self.data.volume[self.contador - self.range] / self.data.volume[self.contador]
 
             if 500000 < self.volume_ini < 3000000 and self.finish is False:
                 if self.precio_relativo <= self.price_relative_range and self.volumen_relativo <= self.volume_relative_range and self.buying is False:
@@ -68,8 +67,7 @@ class Bits(object):
                     #
 
                 if self.buying is True:
-
-                    self.precio_relativo_n = self.data.open[self.contador-self.precio_relativo_num] / self.data.open
+                    self.precio_relativo_n = self.data.open[self.contador - self.precio_relativo_num] / self.data.open
                     self.capital_now = self.data.open * self.coins
 
                     # if self.capital_now > self.capital_before:
@@ -82,8 +80,6 @@ class Bits(object):
                         print("sell")
                         return
                         #
-
-        self.contador += 1
         ###
 
 
@@ -92,10 +88,8 @@ class Bits(object):
 #     sys.exit(0)
 
 
-
 if __name__ == '__main__':
     # signal.signal(signal.SIGINT, cancell_operations)
-
     # time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
     while True:
         if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
