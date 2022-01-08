@@ -21,6 +21,7 @@ class Bits(bt.Strategy):
         ('percentage_lost', 1),
         ('datasize', 1),
         ('volume_ini', 1),
+        ('precio_relativo_negativo', 1),
     )
 
     def __init__(self):
@@ -31,6 +32,7 @@ class Bits(bt.Strategy):
         self.percentage_lost = self.params.percentage_lost
         self.datasize = self.params.datasize
         self.volume_ini = self.params.volume_ini
+        self.precio_relativo_negativo = self.params.precio_relativo_negativo
         self.contador = 0
         self.breaking = False
         self.buying = False
@@ -73,6 +75,9 @@ class Bits(bt.Strategy):
                         # self.buying = False  #
                         # self.stop()
                         # return
+                    if (self.precio_relativo >= self.precio_relativo_negativo):
+                        self.order = self.close()
+                        self.eur = self.capital_now
                     self.capital_before = self.capital_now
 
         self.contador += 1
@@ -88,13 +93,14 @@ def opt_objective(trial):
     global data
     global size
     global volume_ini
-    range = trial.suggest_int('range', 10, 10) #12 = 1hrs
+    range = trial.suggest_int('range', 7, 7) #12 = 1hrs
     price_relative_range = trial.suggest_float('price_relative_range', 0.85, 0.85)
     volume_relative_range = trial.suggest_float('volume_relative_range', 1.0, 1.0)
-    percentage = trial.suggest_int('percentage', 75, 75)
-    percentage_lost = trial.suggest_float('percentage_lost', 30, 30)
+    percentage = trial.suggest_int('percentage', 3335, 3335)
+    percentage_lost = trial.suggest_float('percentage_lost', 35, 35)
     datasize = trial.suggest_int('datasize', size, size)
     volume_ini = trial.suggest_int('volume_ini', volume_ini, volume_ini)
+    precio_negativo = trial.suggest_float('precio_relativo_negativo', 1.46, 1.46)
 
     cerebro = bt.Cerebro()
     cerebro.broker.set_coc(True)
@@ -102,7 +108,7 @@ def opt_objective(trial):
     cerebro.broker.setcash(cash=100.0) # 100€
     # cerebro.addwriter(bt.WriterFile, out='analisis.txt')
     # cerebro.addanalyzer(bt.analyzers.PyFolio, _name='pyfolio')
-    cerebro.addstrategy(Bits, range=range, price_relative_range=price_relative_range, volume_relative_range=volume_relative_range, percentage=percentage, percentage_lost=percentage_lost, datasize=datasize, volume_ini=volume_ini)
+    cerebro.addstrategy(Bits, range=range, price_relative_range=price_relative_range, volume_relative_range=volume_relative_range, percentage=percentage, percentage_lost=percentage_lost, datasize=datasize, volume_ini=volume_ini, precio_relativo_negativo=precio_relativo_negativo)
     cerebro.adddata(data)
     cerebro.run()
     # cerebro.plot()
