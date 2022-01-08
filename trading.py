@@ -1,7 +1,26 @@
+import argparse
 import datetime as dt
 import os
 from multiprocessing import Process
 import pandas as pd
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Crypto broker trading')
+
+    parser.add_argument('-c', '--close',
+                        type=bool,
+                        required=False,
+                        default=False,
+                        help='Close all open transactions')
+
+    parser.add_argument('-w', '--wallet',
+                        type=str,
+                        required=True,
+                        default='',
+                        help='Wallet address')
+
+    return parser.parse_args()
 
 
 class Broker(object):
@@ -45,6 +64,7 @@ class Broker(object):
         self.datasize = df.index.max()
         self.volume_ini = df.iloc[0]['volume'].astype(float)
         self.token = token
+        self.token_url = df.iloc[-1]['url']
 
         if self.data.index.max() >= self.range:
 
@@ -99,8 +119,29 @@ class Broker(object):
                 # [x.join() for x in processes]
 
 
+def closeAllTransactions():
+    pass
+
+
+def buy(eur, url):
+    pass
+
+
+
+def sell(eur, url):
+    pass
+
+
+
 if __name__ == '__main__':
-    time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
-    print(time_now)
-    process = Broker()
-    process.run()
+    args = parse_args()
+    wallet = str(args.wallet)
+    closeAll = str(args.close)
+    # if closeAll == 'True':
+    #     closeAllTransactions()
+    # elif wallet is not '':
+    #     time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
+    #     print(time_now)
+    #     process = Broker()
+    #     process.run()
+    buy()
