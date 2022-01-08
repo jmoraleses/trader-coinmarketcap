@@ -22,6 +22,7 @@ class Bits(bt.Strategy):
         ('datasize', 1),
         ('volume_ini', 1),
         ('precio_relativo_negativo', 1),
+        ('precio_relativo_num', 1),
     )
 
     def __init__(self):
@@ -33,6 +34,7 @@ class Bits(bt.Strategy):
         self.datasize = self.params.datasize
         self.volume_ini = self.params.volume_ini
         self.precio_relativo_negativo = self.params.precio_relativo_negativo
+        self.precio_relativo_num = self.params.precio_relativo_num
         self.contador = 0
         self.breaking = False
         self.buying = False
@@ -46,7 +48,7 @@ class Bits(bt.Strategy):
         self.capital_loss = 0
         self.capital_before = 0
         self.i = 0
-
+        self.finish = False
 
     def next(self):
 
@@ -54,7 +56,7 @@ class Bits(bt.Strategy):
             self.precio_relativo = self.data.open[-self.range] / self.data.open
             self.volumen_relativo = self.data.volume[-self.range] / self.data.volume
 
-            if self.volume_ini > 500000 and self.volume_ini < 3000000:
+            if self.volume_ini > 500000 and self.volume_ini < 3000000 and self.finish is False:
 
                 if ( self.precio_relativo <= self.price_relative_range) and (self.volumen_relativo <= self.volume_relative_range) and self.buying is False:
                     self.capital = self.eur
@@ -65,19 +67,26 @@ class Bits(bt.Strategy):
                     self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
 
                 if self.buying is True:
+                    self.precio_relativo_n = self.data.open[self.precio_relativo_num] / self.data.open
                     self.capital_now = self.data.open * self.coins
                     if self.capital_now > self.capital_before:
                         self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
 
-                    if self.capital_now >= self.capital_win or self.capital_now < self.capital_lost: # or self.data.volume[0] > 400000:
+                    if (self.precio_relativo_n >= self.precio_relativo_negativo):
                         self.order = self.close()
                         self.eur = self.capital_now
-                        # self.buying = False  #
-                        # self.stop()
-                        # return
-                    if (self.precio_relativo >= self.precio_relativo_negativo):
+                        self.finish = True
+
+                    if self.capital_now >= self.capital_win:
                         self.order = self.close()
                         self.eur = self.capital_now
+                        self.finish = True
+
+                    # if self.capital_now < self.capital_lost:
+                    #     self.order = self.close()
+                    #     self.eur = self.capital_now
+                    #     self.finish = True
+
                     self.capital_before = self.capital_now
 
         self.contador += 1
@@ -96,11 +105,12 @@ def opt_objective(trial):
     range = trial.suggest_int('range', 7, 7) #12 = 1hrs
     price_relative_range = trial.suggest_float('price_relative_range', 0.85, 0.85)
     volume_relative_range = trial.suggest_float('volume_relative_range', 1.0, 1.0)
-    percentage = trial.suggest_int('percentage', 3335, 3335)
+    percentage = trial.suggest_int('percentage', 250, 250)
     percentage_lost = trial.suggest_float('percentage_lost', 35, 35)
     datasize = trial.suggest_int('datasize', size, size)
     volume_ini = trial.suggest_int('volume_ini', volume_ini, volume_ini)
-    precio_relativo_negativo = trial.suggest_float('precio_relativo_negativo', 1.46, 1.46)
+    precio_relativo_negativo = trial.suggest_float('precio_relativo_negativo', 1.40, 1.40)
+    precio_relativo_num = trial.suggest_int('precio_relativo_num', -2, -2)
 
     cerebro = bt.Cerebro()
     cerebro.broker.set_coc(True)
@@ -108,7 +118,7 @@ def opt_objective(trial):
     cerebro.broker.setcash(cash=100.0) # 100€
     # cerebro.addwriter(bt.WriterFile, out='analisis.txt')
     # cerebro.addanalyzer(bt.analyzers.PyFolio, _name='pyfolio')
-    cerebro.addstrategy(Bits, range=range, price_relative_range=price_relative_range, volume_relative_range=volume_relative_range, percentage=percentage, percentage_lost=percentage_lost, datasize=datasize, volume_ini=volume_ini, precio_relativo_negativo=precio_relativo_negativo)
+    cerebro.addstrategy(Bits, range=range, price_relative_range=price_relative_range, volume_relative_range=volume_relative_range, percentage=percentage, percentage_lost=percentage_lost, datasize=datasize, volume_ini=volume_ini, precio_relativo_negativo=precio_relativo_negativo, precio_relativo_num=precio_relativo_num)
     cerebro.adddata(data)
     cerebro.run()
     # cerebro.plot()
@@ -164,6 +174,8 @@ if __name__ == '__main__':
             optuna_search(token)
     # optuna_search("Crypto-Arcade-Punk")
     # optuna_search("Multistarter")
-    # optuna_search("MetaMars")
+    # optuna_search("BullDog-Coin")
+    # optuna_search("Community-Token")
+    # optuna_search("DogeWhisky")
     # optuna_search("Metaland-DAO")
     # optuna_search("Safeplus")
