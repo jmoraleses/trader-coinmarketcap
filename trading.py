@@ -4,7 +4,7 @@ from multiprocessing import Process
 import pandas as pd
 
 
-class Bits(object):
+class Broker(object):
 
     # params = (
     #     ('range', 7),
@@ -53,12 +53,13 @@ class Bits(object):
 
             if 500000 < self.volume_ini < 3000000 and self.finish is False:
                 if self.precio_relativo <= self.price_relative_range and self.volumen_relativo <= self.volume_relative_range and self.buying is False:
-                    self.coins = self.capital / self.data.iloc[-1]['price']
                     self.buying = True
+                    self.coins = self.capital / self.data.iloc[-1]['price']
                     self.capital_win = self.capital + (self.capital * (self.percentage / 100))
-                    self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
+                    # self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
                     # call buy
                     print("buy")
+
                     return
                     #
 
@@ -75,14 +76,14 @@ class Bits(object):
                         self.finish = True
                         # call sell
                         print("sell")
+
                         return
                         #
         ###
 
     def run(self):
         while True:
-            # if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
-            if True:
+            if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
                 i = 0
                 data = []
                 processes = []
@@ -101,5 +102,5 @@ class Bits(object):
 if __name__ == '__main__':
     time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
     print(time_now)
-    process = Bits()
+    process = Broker()
     process.run()
