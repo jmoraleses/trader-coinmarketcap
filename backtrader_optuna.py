@@ -52,7 +52,7 @@ class Bits(bt.Strategy):
             self.precio_relativo = self.data.open[-self.range] / self.data.open
             self.volumen_relativo = self.data.volume[-self.range] / self.data.volume
 
-            if self.volume_ini > 1500000 and self.volume_ini < 3000000:
+            if self.volume_ini > 500000 and self.volume_ini < 3000000:
 
                 if ( self.precio_relativo <= self.price_relative_range) and (self.volumen_relativo <= self.volume_relative_range) and self.buying is False:
                     self.capital = self.eur
@@ -91,8 +91,8 @@ def opt_objective(trial):
     range = trial.suggest_int('range', 10, 10) #12 = 1hrs
     price_relative_range = trial.suggest_float('price_relative_range', 0.85, 0.85)
     volume_relative_range = trial.suggest_float('volume_relative_range', 1.0, 1.0)
-    percentage = trial.suggest_int('percentage', 250, 250)
-    percentage_lost = trial.suggest_float('percentage_lost', 35, 35)
+    percentage = trial.suggest_int('percentage', 75, 75)
+    percentage_lost = trial.suggest_float('percentage_lost', 30, 30)
     datasize = trial.suggest_int('datasize', size, size)
     volume_ini = trial.suggest_int('volume_ini', volume_ini, volume_ini)
 
