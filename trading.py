@@ -1,13 +1,7 @@
-import os
-import sys
-import time
-
-import pandas as pd
 import datetime as dt
+import os
 from multiprocessing import Process
-import signal
-
-from past.builtins import raw_input
+import pandas as pd
 
 
 class Bits(object):
@@ -22,7 +16,7 @@ class Bits(object):
     #     ('precio_relativo_num', -2),
     # )
 
-    def __init__(self, data):
+    def __init__(self, df, token):
         self.data = data
         self.range = 7
         self.price_relative_range = 0.85
@@ -31,8 +25,8 @@ class Bits(object):
         self.percentage_lost = 35
         self.precio_relativo_negativo = 1.4
         self.precio_relativo_num = -2
-        self.datasize = data.index.max()
-        self.volume_ini = data['volume'].iloc[0].astype(float)
+        self.datasize = df.index.max()
+        self.volume_ini = df['volume'].iloc[0].astype(float)
         self.contador = -1  # last position
         self.volumen_relativo = 0
         self.precio_relativo = 0
@@ -48,6 +42,7 @@ class Bits(object):
         self.finish = False
         self.eur = 100.0  ###
         self.capital = self.eur
+        self.token = token
 
     def execute(self):
         ###
@@ -83,24 +78,18 @@ class Bits(object):
         ###
 
 
-# def cancell_operations(signum, frame):
-#     print("Cancelando operaciones...")
-#     sys.exit(0)
-
-
 if __name__ == '__main__':
-    # signal.signal(signal.SIGINT, cancell_operations)
     # time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
     while True:
         if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
             i = 0
-            files = os.listdir('csv/')
             data = []
             process = []
+            files = os.listdir('csv/')
             for file in files:
                 if os.path.isfile(os.path.join('csv/', file)):
                     data.append(pd.read_csv("csv/" + file, index_col=0))
-                    process.append(Process(target=Bits, args=(data[i],)))
+                    process.append(Process(target=Bits, args=(data[i], file, )))
                     i += 1
 
             for i in range(len(process)):
