@@ -64,7 +64,7 @@ class Broker(object):
         self.datasize = df.index.max()
         self.volume_ini = df.iloc[0]['volume'].astype(float)
         self.token = token
-        self.token_url = df.iloc[-1]['url']
+        self.token_url = df.iloc[-1]['url_token']
 
         if self.data.index.max() >= self.range:
 
