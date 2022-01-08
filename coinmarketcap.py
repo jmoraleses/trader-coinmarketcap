@@ -121,7 +121,7 @@ def parseList(broken_html):
                 if name not in tokens:
                     tokens.append(name.replace(' ', '-'))
 
-                filename = 'csv/{}.csv'.format(name.replace(' ', '-'))
+                filename = 'csv/{}.csv'.format(name.replace(' ', '-').replace('.', ''))
                 if os.path.isfile(filename):
                     df = pd.read_csv(filename, index_col=0)
                     df = df.append(data, ignore_index=True)

@@ -52,42 +52,29 @@ class Bits(bt.Strategy):
 
     def next(self):
 
-        if self.contador - self.range >= 0 and self.contador - self.range < self.datasize:
+        if 0 <= self.contador - self.range < self.datasize:
             self.precio_relativo = self.data.open[-self.range] / self.data.open
             self.volumen_relativo = self.data.volume[-self.range] / self.data.volume
 
-            if self.volume_ini > 500000 and self.volume_ini < 3000000 and self.finish is False:
+            if 500000 < self.volume_ini < 3000000 and self.finish is False:
                 if self.precio_relativo <= self.price_relative_range and self.volumen_relativo <= self.volume_relative_range and self.buying is False:
-                    self.capital = self.eur
                     self.coins = self.capital / self.data.open
-                    self.order = self.buy(size=self.coins, price=self.data.open)
                     self.buying = True
                     self.capital_win = self.capital + (self.capital * (self.percentage / 100))
                     self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
+                    self.order = self.buy(size=self.coins, price=self.data.open)
 
                 if self.buying is True:
                     self.precio_relativo_n = self.data.open[self.precio_relativo_num] / self.data.open
                     self.capital_now = self.data.open * self.coins
 
-                    if self.capital_now > self.capital_before:
-                        self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
+                    # if self.capital_now > self.capital_before:
+                    #     self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
+                    # self.capital_before = self.capital_now
 
-                    if (self.precio_relativo_n >= self.precio_relativo_negativo):
+                    if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win:
                         self.order = self.close()
-                        self.eur = self.capital_now
                         self.finish = True
-
-                    if self.capital_now >= self.capital_win:
-                        self.order = self.close()
-                        self.eur = self.capital_now
-                        self.finish = True
-
-                    # if self.capital_now < self.capital_lost:
-                    #     self.order = self.close()
-                    #     self.eur = self.capital_now
-                    #     self.finish = True
-
-                    self.capital_before = self.capital_now
 
         self.contador += 1
 
