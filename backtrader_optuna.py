@@ -47,6 +47,8 @@ class Bits(bt.Strategy):
         self.capital_now = 0
         self.capital_loss = 0
         self.capital_before = 0
+        self.capital_lost = 0
+        self.precio_relativo_n = 0
         self.i = 0
         self.finish = False
 

@@ -42,6 +42,7 @@ class Bits(object):
         self.capital_loss = 0
         self.capital_before = 0
         self.precio_relativo_n = 0
+        self.capital_lost = 0
         self.i = 0
         self.buying = False
         self.finish = False
@@ -85,20 +86,15 @@ class Bits(object):
         self.contador += 1
         ###
 
-process = []
-def cancell_operations(signum, frame):
-    global process
-    print("Cancelando operaciones...")
-    #
 
-    #
-    sys.exit(0)
-
+# def cancell_operations(signum, frame):
+#     print("Cancelando operaciones...")
+#     sys.exit(0)
 
 
 
 if __name__ == '__main__':
-    signal.signal(signal.SIGINT, cancell_operations)
+    # signal.signal(signal.SIGINT, cancell_operations)
 
     # time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
     while True:
@@ -106,6 +102,7 @@ if __name__ == '__main__':
             i = 0
             files = os.listdir('csv/')
             data = []
+            process = []
             for file in files:
                 if os.path.isfile(os.path.join('csv/', file)):
                     data.append(pd.read_csv("csv/" + file, index_col=0))
