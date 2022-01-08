@@ -42,7 +42,7 @@ class Bits(bt.Strategy):
         self.capital = self.eur
         self.volumen_relativo = 0
         self.precio_relativo = 0
-        self.coins =0
+        self.coins = 0
         self.capital_win = 0
         self.capital_now = 0
         self.capital_loss = 0
@@ -57,8 +57,7 @@ class Bits(bt.Strategy):
             self.volumen_relativo = self.data.volume[-self.range] / self.data.volume
 
             if self.volume_ini > 500000 and self.volume_ini < 3000000 and self.finish is False:
-
-                if ( self.precio_relativo <= self.price_relative_range) and (self.volumen_relativo <= self.volume_relative_range) and self.buying is False:
+                if self.precio_relativo <= self.price_relative_range and self.volumen_relativo <= self.volume_relative_range and self.buying is False:
                     self.capital = self.eur
                     self.coins = self.capital / self.data.open
                     self.order = self.buy(size=self.coins, price=self.data.open)
@@ -69,6 +68,7 @@ class Bits(bt.Strategy):
                 if self.buying is True:
                     self.precio_relativo_n = self.data.open[self.precio_relativo_num] / self.data.open
                     self.capital_now = self.data.open * self.coins
+
                     if self.capital_now > self.capital_before:
                         self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
 
