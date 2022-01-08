@@ -100,7 +100,7 @@ def opt_objective(trial):
     percentage_lost = trial.suggest_float('percentage_lost', 35, 35)
     datasize = trial.suggest_int('datasize', size, size)
     volume_ini = trial.suggest_int('volume_ini', volume_ini, volume_ini)
-    precio_negativo = trial.suggest_float('precio_relativo_negativo', 1.46, 1.46)
+    precio_relativo_negativo = trial.suggest_float('precio_relativo_negativo', 1.46, 1.46)
 
     cerebro = bt.Cerebro()
     cerebro.broker.set_coc(True)
