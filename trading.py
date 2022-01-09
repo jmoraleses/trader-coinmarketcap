@@ -96,7 +96,7 @@ class Broker(object):
 
                 if 220000 < self.volume_ini < 3000000:
                     # buy
-                    if self.precio_relativo <= self.price_relative_range and self.volumen_relativo <= self.volume_relative_range and self.last_operation == "nothing":
+                    if self.precio_relativo <= self.price_relative_range and self.volumen_relativo <= self.volume_relative_range and self.last_operation is "nothing" and self.last_operation is not 'buy':
 
                         self.coins = self.capital / self.data.iloc[-1]['price']
                         self.capital_win = self.capital + (self.capital * (self.percentage / 100))
@@ -143,22 +143,21 @@ class Broker(object):
 
                         # comprobamos si existe alguna operación anterior sobre el token
                         last_operation = 'nothing'
-                        if os.path.isfile(os.path.join('csv/operations/', file.replace('.csv', '')+'_operations.csv')):
-                            name_file_operations = file.replace('.csv', '')+"_operations.csv"
-                            if os.path.isfile(name_file_operations):
-                                df_operations = pd.read_csv(name_file_operations, index_col=0)
-                                if df_operations.iloc[-1]['operation'] == 'buy':
-                                    last_operation = 'buy'
-                                elif df_operations.iloc[-1]['operation'] == 'sell':
-                                    last_operation = 'sell'
+                        name_file_operations = file.replace('.csv', '') + "_operations.csv"
+                        if os.path.isfile(os.path.join('csv/operations/', name_file_operations)):
+                            df_operations = pd.read_csv(name_file_operations, index_col=0)
+                            if df_operations.iloc[-1]['operation'] == 'buy':
+                                last_operation = 'buy'
+                            elif df_operations.iloc[-1]['operation'] == 'sell':
+                                last_operation = 'sell'
 
                         data.append(pd.read_csv("csv/" + file, index_col=0))
-                        processes.append(Process(target=self.trading, args=(data[i], file, last_operation,)))
+                        processes.append(Process(target=self.trading, args=(data[i], file.replace('.csv', ''), last_operation,)))
                         i += 1
 
                 # print("start")
                 [x.start() for x in processes]
-                # [x.join() for x in processes]
+                [x.join() for x in processes]
 
             else:
                 time.sleep(1)
