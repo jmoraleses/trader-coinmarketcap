@@ -73,8 +73,10 @@ class Broker(object):
         self.capital_before = 0
         self.precio_relativo_n = 0
         self.capital_lost = 0
+        self.capital_before = 0
         self.i = 0
         self.capital = capital
+
 
     def trading(self, df, token, last_operation):
         global position_max
@@ -113,9 +115,12 @@ class Broker(object):
                         self.precio_relativo_n = self.data.iloc[-1 - self.precio_relativo_num]['price'] / \
                                                  self.data.iloc[-1]['price']
                         self.capital_now = self.data.iloc[-1]['price'] * self.coins
-                        self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
 
-                        if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win or self.capital_now <= self.capital_lost:
+                        # if self.capital_now > self.capital_before:
+                        #     self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
+                        # self.capital_before = self.capital_now
+
+                        if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win: # or self.capital_now <= self.capital_lost:
                             # call close transaction (sell)
                             closeTransaction(self.token)
                             return
