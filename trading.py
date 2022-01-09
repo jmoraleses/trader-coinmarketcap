@@ -2,7 +2,6 @@ import argparse
 import datetime as dt
 import json
 import os
-import time
 from multiprocessing import Process
 import pandas as pd
 import requests
@@ -10,12 +9,14 @@ from bs4 import BeautifulSoup
 from web3 import Web3
 import coinmarketcap
 
-capital = None
-address = None
-private_key = None
+capital = 100.0
+# address = None
+# private_key = None
 position_open = 0
 position_max = 4  # cantidad total de transacciones permitidas al mismo tiempo
 all_tokens = []
+
+
 
 
 def parse_args():
@@ -28,9 +29,9 @@ def parse_args():
                         help='Close all open transactions')
 
     parser.add_argument('-c', '--capital',
-                        type=str,
+                        type=float,
                         required=False,
-                        default='',
+                        default=100.0,
                         help='Capital to trade')
 
     parser.add_argument('-a', '--address',
@@ -88,7 +89,8 @@ class Broker(object):
                 self.precio_relativo = self.data.iloc[-1 - self.range]['price'] / self.data.iloc[-1]['price']
                 self.volumen_relativo = self.data.iloc[-1 - self.range]['volume'] / self.data.iloc[-1]['volume']
 
-                if 220000 < self.volume_ini < 3000000:  # and self.finish is False:
+                if 220000 < self.volume_ini < 3000000:
+                    # buy
                     if self.precio_relativo <= self.price_relative_range and self.volumen_relativo <= self.volume_relative_range and self.last_operation == "nothing":
 
                         self.coins = self.capital / self.data.iloc[-1]['price']
@@ -96,11 +98,11 @@ class Broker(object):
                         # self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
                         # call buy
                         if position_open < position_max:
-                            print("buy")
                             buy(self.token, self.token_url)
                         return
-                        #
+                    #
 
+                    # sell
                     if self.last_operation == "buy":
 
                         self.precio_relativo_n = self.data.iloc[-1 - self.precio_relativo_num]['price'] / \
@@ -109,12 +111,10 @@ class Broker(object):
                         self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
 
                         if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win or self.capital_now <= self.capital_lost:
-                            # call sell
-                            print("sell")
+                            # call close transaction (sell)
                             closeTransaction(self.token)
-                            # sell(self.token, self.token_url)
                             return
-                            #
+                    #
         ###
 
     def run(self):
@@ -347,25 +347,22 @@ def main():
     global address
     global private_key
     args = parse_args()
-    capital = str(args.capital)
+    capital = float(args.capital)
     address = str(args.address)
     private_key = str(args.private_key)
-    closeAll = str(args.terminate)
+    closeAll = bool(args.terminate)
+    closeAll = False ###
 
     html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
     all_tokens = find_tokens(html)
 
-    # if closeAll == 'True':
-    #     closeAllTransactions()
-    # elif wallet is not '':
-    #     time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
-    #     print(time_now)
-    #     process = Broker()
-    #     process.run()
-
-    # process = Broker()
-    # process.run()
-    buy("Cake", "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c")
+    if closeAll == 'True':
+        pass ###
+        # closeAllTransactions()
+    elif address is not '' and private_key is not '' and capital > 0.0:
+        time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
+        print('{} start'.format(time_now))
+        Broker().run()
 
 
 if __name__ == '__main__':
