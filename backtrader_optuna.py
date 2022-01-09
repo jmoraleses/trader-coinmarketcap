@@ -57,7 +57,7 @@ class Bits(bt.Strategy):
 
     def next(self):
 
-        if 0.001 > self.price_min > 0.0000000003:
+        if 0.001 > self.price_min > 0.000001:
             if 0 <= self.contador - self.range < self.datasize:
                 self.precio_relativo = self.data.open[-self.range] / self.data.open
                 self.volumen_relativo = self.data.volume[-self.range] / self.data.volume
@@ -92,7 +92,7 @@ class Bits(bt.Strategy):
 
 
 price_min_range = 0
-rango = 12 #12
+rango = 12
 size = 0
 def opt_objective(trial):
     global data
@@ -105,7 +105,7 @@ def opt_objective(trial):
     price_relative_range = trial.suggest_float('price_relative_range', 0.85, 0.85)
     volume_relative_range = trial.suggest_float('volume_relative_range', 1.0, 1.0)
     percentage = trial.suggest_int('percentage', 300, 300) #250
-    percentage_lost = trial.suggest_float('percentage_lost', 30, 30) #35
+    percentage_lost = trial.suggest_float('percentage_lost', 10, 10) #35
     datasize = trial.suggest_int('datasize', size, size)
     volume_ini = trial.suggest_int('volume_ini', volume_ini, volume_ini)
     precio_relativo_negativo = trial.suggest_float('precio_relativo_negativo', 1.40, 1.40) #1.40
@@ -121,7 +121,8 @@ def opt_objective(trial):
     cerebro.addstrategy(Bits, range=range_index, price_relative_range=price_relative_range, volume_relative_range=volume_relative_range, percentage=percentage, percentage_lost=percentage_lost, datasize=datasize, volume_ini=volume_ini, precio_relativo_negativo=precio_relativo_negativo, precio_relativo_num=precio_relativo_num, price_min_range=price_min_range)
     cerebro.adddata(data)
     cerebro.run()
-    # cerebro.plot()
+    if float(cerebro.broker.get_value()) != 100.0:
+        cerebro.plot()
     # print('value: {}, cash: {}'.format(cerebro.broker.get_value(), cerebro.broker.get_cash()))
     return float(cerebro.broker.get_value())
 

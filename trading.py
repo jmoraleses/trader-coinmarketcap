@@ -17,7 +17,6 @@ position_open = 0
 position_max = 4
 all_tokens = []
 
-
 def parse_args():
     parser = argparse.ArgumentParser(description='Crypto broker trading')
 
@@ -63,11 +62,11 @@ class Broker(object):
 
     def __init__(self, *args, **kwargs):
         global capital
-        self.range = 7
+        self.range = 12
         self.price_relative_range = 0.85
         self.volume_relative_range = 1.0
-        self.percentage = 250
-        self.percentage_lost = 35
+        self.percentage = 300
+        self.percentage_lost = 10
         self.precio_relativo_negativo = 1.4
         self.precio_relativo_num = -2
         self.volumen_relativo = 0
@@ -84,6 +83,7 @@ class Broker(object):
         self.finish = False
         self.capital = capital
 
+
     def trading(self, df, token):
 
         self.data = df
@@ -91,40 +91,42 @@ class Broker(object):
         self.volume_ini = df.iloc[0]['volume'].astype(float)
         self.token = token
         self.token_url = df.iloc[-1]['url_token']
+        self.price_min = df['price'].iloc[[0, self.range]].mean()
 
-        if self.data.index.max() >= self.range:
+        if 0.001 > self.price_min > 0.000001:
+            if self.data.index.max() >= self.range:
 
-            self.precio_relativo = self.data.iloc[-1 - self.range]['price'] / self.data.iloc[-1]['price']
-            self.volumen_relativo = self.data.iloc[-1 - self.range]['volume'] / self.data.iloc[-1]['volume']
+                self.precio_relativo = self.data.iloc[-1 - self.range]['price'] / self.data.iloc[-1]['price']
+                self.volumen_relativo = self.data.iloc[-1 - self.range]['volume'] / self.data.iloc[-1]['volume']
 
-            if 500000 < self.volume_ini < 3000000 and self.finish is False:
-                if self.precio_relativo <= self.price_relative_range and self.volumen_relativo <= self.volume_relative_range and self.buying is False:
-                    self.buying = True
-                    self.coins = self.capital / self.data.iloc[-1]['price']
-                    self.capital_win = self.capital + (self.capital * (self.percentage / 100))
-                    # self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
-                    # call buy
-                    print("buy")
-                    buy(self.token, self.token_url)
-                    return
-                    #
-
-                if self.buying is True:
-                    self.precio_relativo_n = self.data.iloc[-1 - self.precio_relativo_num]['price'] / \
-                                             self.data.iloc[-1]['price']
-                    self.capital_now = self.data.iloc[-1]['price'] * self.coins
-
-                    # if self.capital_now > self.capital_before:
-                    #     self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
-                    # self.capital_before = self.capital_now
-
-                    if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win:
-                        self.finish = True
-                        # call sell
-                        print("sell")
-
+                if 220000 < self.volume_ini < 3000000 and self.finish is False:
+                    if self.precio_relativo <= self.price_relative_range and self.volumen_relativo <= self.volume_relative_range and self.buying is False:
+                        self.buying = True
+                        self.coins = self.capital / self.data.iloc[-1]['price']
+                        self.capital_win = self.capital + (self.capital * (self.percentage / 100))
+                        # self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
+                        # call buy
+                        print("buy")
+                        buy(self.token, self.token_url)
                         return
                         #
+
+                    if self.buying is True:
+                        self.precio_relativo_n = self.data.iloc[-1 - self.precio_relativo_num]['price'] / \
+                                                 self.data.iloc[-1]['price']
+                        self.capital_now = self.data.iloc[-1]['price'] * self.coins
+
+                        # if self.capital_now > self.capital_before:
+                        #     self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
+                        # self.capital_before = self.capital_now
+
+                        if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win:
+                            self.finish = True
+                            # call sell
+                            print("sell")
+
+                            return
+                            #
         ###
 
     def run(self):
