@@ -245,7 +245,7 @@ def buy(token_name, token_url):
                 df = pd.DataFrame(data)
                 df.to_csv("csv/operations/" + token_name + "_operations.csv")
 
-            print('{} Sell {}: {}'.format(time_now, token_name, coins))
+            print('{} Buy {}: {}'.format(time_now, token_name, coins))
             return True
 
     except ValueError:
