@@ -1,26 +1,47 @@
 import argparse
 import datetime as dt
 import os
+import pprint
 from multiprocessing import Process
 import pandas as pd
+import requests
+from web3 import Web3
+import time, json
 
+
+capital = None
+address = None
+private_key = None
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Crypto broker trading')
 
-    parser.add_argument('-c', '--close',
+    parser.add_argument('-t', '--terminate',
                         type=bool,
                         required=False,
                         default=False,
                         help='Close all open transactions')
 
-    parser.add_argument('-w', '--wallet',
+    parser.add_argument('-c', '--capital',
                         type=str,
-                        required=True,
+                        required=False,
+                        default='',
+                        help='Capital to trade')
+
+    parser.add_argument('-a', '--address',
+                        type=str,
+                        required=False,
                         default='',
                         help='Wallet address')
 
+    parser.add_argument('-k', '--private_key',
+                        type=str,
+                        required=False,
+                        default='',
+                        help='Wallet private key')
+
     return parser.parse_args()
+
 
 
 class Broker(object):
@@ -36,6 +57,7 @@ class Broker(object):
     # )
 
     def __init__(self, *args, **kwargs):
+        global capital
         self.range = 7
         self.price_relative_range = 0.85
         self.volume_relative_range = 1.0
@@ -55,8 +77,7 @@ class Broker(object):
         self.i = 0
         self.buying = False
         self.finish = False
-        self.eur = 100.0  ###
-        self.capital = self.eur
+        self.capital = capital
 
     def trading(self, df, token):
 
@@ -79,7 +100,7 @@ class Broker(object):
                     # self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
                     # call buy
                     print("buy")
-
+                    buy(self.coins, self.token_url)
                     return
                     #
 
@@ -123,20 +144,91 @@ def closeAllTransactions():
     pass
 
 
-def buy(eur, url):
-    pass
+def buy(coins, token_url):
+    global address
+    global private_key
 
+
+    sender_address = address
+
+    bsc = "https://bsc-dataseed.binance.org/"
+    web3 = Web3(Web3.HTTPProvider(bsc))
+    # print(web3.isConnected())
+
+    # This is global Pancake V2 Swap router address
+    router_pancake_address = "0x10ED43C718714eb63d5aA57B78B54704E256024E"
+
+    # Get ABI from BSCscan
+    # url_eth = "https://api.bscscan.com/api"
+    # router_pancake_address = "0x10ED43C718714eb63d5aA57B78B54704E256024E"
+    # contract_address = web3.toChecksumAddress(router_pancake_address)
+    # API_ENDPOINT = url_eth + "?module=contract&action=getabi&address=" + str(contract_address)
+    # r = requests.get(url=API_ENDPOINT)
+    # response = r.json()
+    # PancakeABI = json.loads(response["result"])
+    # # print(PancakeABI)
+    # #
+    # file = open("pancakeABI.txt", "w")
+    # json.dump(PancakeABI, file)
+    # file.close()
+    #
+
+    PancakeABI = open('pancakeABI.txt', 'r').read()
+    # print(PancakeABI)
+
+
+    # always spend using Wrapped BNB
+    # I guess you want to use other coins to swap you can do that, but for me I used Wrapped BNB
+    spend = web3.toChecksumAddress("0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82") #now cake  # Wrapped BNB token 0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c
+    # Print out your balances just for checking
+    balance = web3.eth.get_balance(sender_address)
+    print(balance)
+    humanReadable = web3.fromWei(balance, 'ether')
+    print(humanReadable)
+
+
+
+    # Setup the PancakeSwap contract
+    contract = web3.eth.contract(address=router_pancake_address, abi=PancakeABI)
+
+    nonce = web3.eth.get_transaction_count(sender_address)
+
+    # Contract id is the new token we are swaping to
+    contract_id = web3.toChecksumAddress("0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c") #token_url
+
+
+    pancakeswap2_txn = contract.functions.swapExactETHForTokens(
+        coins,
+        # here setup the minimum destination token you want to have, you can do some math, or you can put a 0 if you don't want to care
+        [spend, contract_id],
+        sender_address,
+        (int(time.time()) + 1000000)
+    ).buildTransaction({
+        'from': sender_address,
+        'value': web3.toWei(0.02, 'ether'),  # This is the Token(BNB) amount you want to Swap from
+        'gas': 250000,
+        'gasPrice': web3.toWei('5', 'gwei'),
+        'nonce': nonce,
+    })
+
+    signed_txn = web3.eth.account.sign_transaction(pancakeswap2_txn, private_key=private_key)
+    tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+    print(web3.toHex(tx_token))
 
 
 def sell(eur, url):
     pass
 
 
-
-if __name__ == '__main__':
+def main():
+    global capital
+    global address
+    global private_key
     args = parse_args()
-    wallet = str(args.wallet)
-    closeAll = str(args.close)
+    capital = str(args.capital)
+    address = str(args.address)
+    private_key = str(args.private_key)
+    closeAll = str(args.terminate)
     # if closeAll == 'True':
     #     closeAllTransactions()
     # elif wallet is not '':
@@ -144,4 +236,9 @@ if __name__ == '__main__':
     #     print(time_now)
     #     process = Broker()
     #     process.run()
-    buy()
+    buy(1, "0xbba24300490443bb0e344bf6ec11bac3aa91df72")
+
+
+
+if __name__ == '__main__':
+    main()
