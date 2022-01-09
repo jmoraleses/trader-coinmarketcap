@@ -5,15 +5,19 @@ import pprint
 from multiprocessing import Process
 import pandas as pd
 import requests
+from bs4 import BeautifulSoup
 from web3 import Web3
 import time, json
 
+import coinmarketcap
 
 capital = None
 address = None
 private_key = None
 position_open = 0
 position_max = 4
+all_tokens = []
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Crypto broker trading')
@@ -127,12 +131,21 @@ class Broker(object):
         ###
 
     def run(self):
+        global all_tokens
         while True:
-            if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
+            if True:
+            # if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
                 i = 0
                 data = []
                 processes = []
                 files = os.listdir('csv/')
+
+                for file_dead in files:
+                    name_file = file_dead.replace(' ', '-').replace('.csv', '').replace('.', '')
+                    if name_file not in all_tokens:
+                        # cerrar operaciones abiertas de un token si ya no existe en la lista
+                        closeTransaction(name_file)
+
                 for file in files:
                     if os.path.isfile(os.path.join('csv/', file)):
                         data.append(pd.read_csv("csv/" + file, index_col=0))
@@ -148,6 +161,29 @@ def closeAllTransactions():
     pass
 
 
+def closeTransaction(name_file):
+    pass
+    #comprobar csv y si existe posición de compra, vender.
+
+
+def getABI():
+    # Get ABI from BSCscan
+    bsc = "https://bsc-dataseed.binance.org/"
+    web3 = Web3(Web3.HTTPProvider(bsc))
+    url_eth = "https://api.bscscan.com/api"
+    router_pancake_address = "0x10ED43C718714eb63d5aA57B78B54704E256024E"
+    contract_address = web3.toChecksumAddress(router_pancake_address)
+    API_ENDPOINT = url_eth + "?module=contract&action=getabi&address=" + str(contract_address)
+    r = requests.get(url=API_ENDPOINT)
+    response = r.json()
+    PancakeABI = json.loads(response["result"])
+    # print(PancakeABI)
+    file = open("pancakeABI.txt", "w")
+    json.dump(PancakeABI, file)
+    file.close()
+
+
+
 def buy(token_url):
     global address
     global private_key
@@ -159,27 +195,12 @@ def buy(token_url):
 
     bsc = "https://bsc-dataseed.binance.org/"
     web3 = Web3(Web3.HTTPProvider(bsc))
-    # print(web3.isConnected())
 
     # This is global Pancake V2 Swap router address
     router_pancake_address = "0x10ED43C718714eb63d5aA57B78B54704E256024E"
 
-    # Get ABI from BSCscan
-    # url_eth = "https://api.bscscan.com/api"
-    # router_pancake_address = "0x10ED43C718714eb63d5aA57B78B54704E256024E"
-    # contract_address = web3.toChecksumAddress(router_pancake_address)
-    # API_ENDPOINT = url_eth + "?module=contract&action=getabi&address=" + str(contract_address)
-    # r = requests.get(url=API_ENDPOINT)
-    # response = r.json()
-    # PancakeABI = json.loads(response["result"])
-    # # print(PancakeABI)
-    # #
-    # file = open("pancakeABI.txt", "w")
-    # json.dump(PancakeABI, file)
-    # file.close()
-    #
-
     PancakeABI = open('pancakeABI.txt', 'r').read()
+    # getABI() # not used
     # print(PancakeABI)
 
     # always spend using Wrapped BNB
@@ -190,7 +211,6 @@ def buy(token_url):
     print(balance)
     humanReadable = web3.fromWei(balance, 'ether')
     print(humanReadable)
-
 
 
     # Setup the PancakeSwap contract
@@ -231,7 +251,24 @@ def sell(eur, url):
     pass
 
 
+def find_tokens(broken_html):
+    tokens = []
+    soup = BeautifulSoup(broken_html, 'html.parser')
+    tbody = soup.find('tbody')
+    for row in tbody.find_all('tr'):
+        try:
+            img = row.select_one("td > div > img").get('src')
+            if img.find('1839') != -1:
+                name = row.find('a', class_='cmc-link').find('p').text
+                if name not in tokens:
+                    tokens.append(name.replace(' ', '-').replace('.', ''))
+        except:
+            print('Error al rasrear la lista')
+    return tokens
+
+
 def main():
+    global all_tokens
     global capital
     global address
     global private_key
@@ -247,7 +284,11 @@ def main():
     #     print(time_now)
     #     process = Broker()
     #     process.run()
-    buy("0xbba24300490443bb0e344bf6ec11bac3aa91df72")
+    html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
+    all_tokens = find_tokens(html)
+    process = Broker()
+    process.run()
+    # buy("0xbba24300490443bb0e344bf6ec11bac3aa91df72")
 
 
 
