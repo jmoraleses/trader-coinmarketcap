@@ -107,12 +107,9 @@ class Broker(object):
                         self.precio_relativo_n = self.data.iloc[-1 - self.precio_relativo_num]['price'] / \
                                                  self.data.iloc[-1]['price']
                         self.capital_now = self.data.iloc[-1]['price'] * self.coins
+                        self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
 
-                        # if self.capital_now > self.capital_before:
-                        #     self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
-                        # self.capital_before = self.capital_now
-
-                        if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win:
+                        if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win or self.capital_now <= self.capital_lost:
                             # call sell
                             print("sell")
                             sell(self.token, self.token_url)
@@ -209,7 +206,7 @@ def buy(token_name, token_url):
     # Setup the PancakeSwap contract
     contract = web3.eth.contract(address=router_pancake_address, abi=PancakeABI)
     nonce = web3.eth.get_transaction_count(sender_address)
-    contract_id = web3.toChecksumAddress("0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c") #token_url #Contract id is the new token we are swaping to
+    contract_id = web3.toChecksumAddress(token_url) #token_url #Contract id is the new token we are swaping to
 
     if position_open < position_max:
         coins = float(balance) / float(position_max - position_open)
@@ -244,6 +241,7 @@ def buy(token_name, token_url):
         else:
             df = pd.DataFrame(data)
             df.to_csv("csv/" + token_name + "_operations.csv")
+
         return True
 
     except ValueError:
@@ -323,7 +321,7 @@ def main():
 
     # process = Broker()
     # process.run()
-    buy("Cake", "0xbba24300490443bb0e344bf6ec11bac3aa91df72")
+    buy("Cake", "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c")
 
 
 
