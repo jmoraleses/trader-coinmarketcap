@@ -17,6 +17,9 @@ position_max = 4  # cantidad total de transacciones permitidas al mismo tiempo
 all_tokens = []
 
 
+#closeTransaction
+#parse_args
+#closeAll in main()
 
 
 def parse_args():
@@ -77,14 +80,15 @@ class Broker(object):
         global position_open
         self.data = df
         self.datasize = df.index.max()
-        self.volume_ini = df.iloc[0]['volume'].astype(float)
+        self.volume_ini = df.iloc[0]['volume']
         self.token = token
         self.token_url = df.iloc[-1]['url_token']
-        self.price_min = df['price'].iloc[[0, self.range]].mean()
         self.last_operation = last_operation
 
-        if 0.001 > self.price_min > 0.000001:
-            if self.data.index.max() >= self.range:
+
+        if self.datasize >= self.range:
+            self.price_min = df['price'].iloc[[0, self.range]].mean()
+            if 0.001 > self.price_min > 0.000001:
 
                 self.precio_relativo = self.data.iloc[-1 - self.range]['price'] / self.data.iloc[-1]['price']
                 self.volumen_relativo = self.data.iloc[-1 - self.range]['volume'] / self.data.iloc[-1]['volume']
@@ -137,6 +141,7 @@ class Broker(object):
                     if os.path.isfile(os.path.join('csv/', file)):
 
                         # comprobamos si existe alguna operación anterior sobre el token
+                        last_operation = 'nothing'
                         if file.find('_operations') == -1:
                             name_file_operations = file.replace('.csv', '')
                             name_file_operations += "_operations.csv"
@@ -146,14 +151,12 @@ class Broker(object):
                                     last_operation = 'buy'
                                 elif df_operations.iloc[-1]['operation'] == 'sell':
                                     last_operation = 'sell'
-                        else:
-                            last_operation = 'nothing'
 
                         data.append(pd.read_csv("csv/" + file, index_col=0))
                         processes.append(Process(target=self.trading, args=(data[i], file, last_operation,)))
                         i += 1
 
-                print("start")
+                # print("start")
                 [x.start() for x in processes]
                 # [x.join() for x in processes]
 
@@ -195,7 +198,8 @@ def buy(token_name, token_url):
     balance_ = web3.eth.get_balance(address)
     balance = web3.fromWei(balance_, 'ether')
     # print(balance_)
-    print(balance)
+    balance = 100.0 ###
+    # print(balance)
 
     # Setup the PancakeSwap contract
     contract = web3.eth.contract(address=router_pancake_address, abi=PancakeABI)
@@ -309,7 +313,7 @@ def closeTransaction(token_name):
             # sell token
             sell(token_name, token_url, coins)
             # delete file
-            os.remove("csv/" + token_name + ".csv")
+            # os.remove("csv/" + token_name + ".csv") ###
             # guardar en el archivo transacciones la venta
             time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
             data = pd.json_normalize(
@@ -346,17 +350,17 @@ def main():
     global capital
     global address
     global private_key
-    args = parse_args()
-    capital = float(args.capital)
-    address = str(args.address)
-    private_key = str(args.private_key)
-    closeAll = bool(args.terminate)
+    # args = parse_args()
+    # capital = float(args.capital)
+    # address = str(args.address)
+    # private_key = str(args.private_key)
+    # closeAll = bool(args.terminate)
     closeAll = False ###
 
     html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
     all_tokens = find_tokens(html)
 
-    if closeAll == 'True':
+    if closeAll is True:
         pass ###
         # closeAllTransactions()
     elif address is not '' and private_key is not '' and capital > 0.0:

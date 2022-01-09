@@ -15,3 +15,4 @@ lxml
 requests
 cssselect
 future
+web3

@@ -73,13 +73,12 @@ class Bits(bt.Strategy):
                     if self.buying is True:
                         self.precio_relativo_n = self.data.open[self.precio_relativo_num] / self.data.open
                         self.capital_now = self.data.open * self.coins
-                        self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
 
                         # if self.capital_now > self.capital_before:
                         #     self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
                         # self.capital_before = self.capital_now
 
-                        if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win or self.capital_now <= self.capital_lost:
+                        if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win: # or self.capital_now <= self.capital_lost:
                             self.order = self.close()
                             self.finish = True
 
@@ -105,7 +104,7 @@ def opt_objective(trial):
     price_relative_range = trial.suggest_float('price_relative_range', 0.85, 0.85)
     volume_relative_range = trial.suggest_float('volume_relative_range', 1.0, 1.0)
     percentage = trial.suggest_int('percentage', 300, 300) #250
-    percentage_lost = trial.suggest_float('percentage_lost', 10, 10) #35
+    percentage_lost = trial.suggest_float('percentage_lost', 35, 35) #35
     datasize = trial.suggest_int('datasize', size, size)
     volume_ini = trial.suggest_int('volume_ini', volume_ini, volume_ini)
     precio_relativo_negativo = trial.suggest_float('precio_relativo_negativo', 1.40, 1.40) #1.40
@@ -178,6 +177,7 @@ if __name__ == '__main__':
     for file in files:
         if os.path.isfile(os.path.join('csv/', file)):
             token = file.split('.')[0]
+            print(token)
             optuna_search(token)
     # optuna_search("Crypto-Arcade-Punk")
     # optuna_search("Multistarter")
