@@ -1,41 +1,18 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function, unicode_literals)
-
-import argparse
 import datetime as dt
 import os
 import time
 from multiprocessing import Process
-
-import optuna
 import pandas as pd
 from dateutil.relativedelta import relativedelta
-import backtrader_optuna
 import coinmarketcap
-
-
-def parse_args():
-    parser = argparse.ArgumentParser(description='CCXT Market')
-
-    parser.add_argument('-s', '--symbol',
-                        type=str,
-                        required=True,
-                        help='The Symbol of the Instrument/Currency Pair To Download')
-
-    parser.add_argument('-a', '--apikey',
-                        type=str,
-                        required=False,
-                        default='',
-                        help='The exchange api key')
-
-    return parser.parse_args()
 
 
 def get_date_range(number_of_days: int):
     now = dt.datetime.now()
     dt_end = now.strftime("%Y%m%d")
     dt_start = (now - relativedelta(days=number_of_days)).strftime("%Y%m%d")
-    # return f'start={dt_start}&end={dt_end}'
     return dt_start, dt_end
 
 def tokens_relative(tokens):
@@ -127,18 +104,6 @@ def control():
             # tokens_relative(tokens)
         else:
             time.sleep(1)
-
-
-# def buyORsell():
-#     global all_tokens
-#     for token in all_tokens:
-#         if os.path.isfile("csv/" + token + "_changes.csv"):
-#             df9 = pd.read_csv("csv/" + token['name'] + "_changes.csv", index_col=0)
-#             if (df9.index >= 12):
-#                 if df9['price_relative_average'].iloc[-12].mean() > 1.1 and df9['volume_relative_average'].iloc[-12].mean() > 1.1:
-#                     print("Buy " + token['name'] + " a " + df9['price'].iloc[-1] + " a las " + dt.datetime.now())
-#
-#
 
 
 

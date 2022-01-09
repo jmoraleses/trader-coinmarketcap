@@ -106,9 +106,7 @@ class Broker(object):
                     # self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
                     # call buy
                     print("buy")
-                    t = False
-                    while t is False:
-                        t = buy(self.token_url)
+                    buy(self.token, self.token_url)
                     return
                     #
 
@@ -133,8 +131,8 @@ class Broker(object):
     def run(self):
         global all_tokens
         while True:
-            if True:
-            # if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
+            # if True:
+            if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
                 i = 0
                 data = []
                 processes = []
@@ -162,8 +160,13 @@ def closeAllTransactions():
 
 
 def closeTransaction(name_file):
-    pass
-    #comprobar csv y si existe posición de compra, vender.
+    # si existe el archivo continuar
+    filename = "csv/" + name_file + "_operations.csv"
+    if os.path.isfile(filename):
+        df = pd.read_csv(filename, index_col=0)
+        if df.iloc[-1]['operation'] == 'buy':
+            token_url = df.iloc[-1]['token_url']
+            sell(name_file, token_url)
 
 
 def getABI():
@@ -184,7 +187,7 @@ def getABI():
 
 
 
-def buy(token_url):
+def buy(token_name, token_url):
     global address
     global private_key
     global position_open
@@ -240,6 +243,17 @@ def buy(token_url):
         signed_txn = web3.eth.account.sign_transaction(pancakeswap2_txn, private_key=private_key)
         tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
         print('tx: {}'.format(web3.toHex(tx_token)))
+
+        #guardar en csv la fecha, la compra y la cantidad de tokens
+        time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
+        data = pd.json_normalize({'time': time_now, 'name': token_name, 'operation': 'buy', 'coins': coins_base, 'token_url': token_url})
+        if os.path.isfile("csv/" + token_name + "_operations.csv"):
+            df = pd.read_csv("csv/" + token_name + "_operations.csv", index_col=0)
+            df = df.append(data, ignore_index=True)
+            df.to_csv("csv/" + token_name + "_operations.csv")
+        else:
+            df = pd.DataFrame(data)
+            df.to_csv("csv/" + token_name + "_operations.csv")
         return True
 
     except ValueError:
@@ -277,6 +291,10 @@ def main():
     address = str(args.address)
     private_key = str(args.private_key)
     closeAll = str(args.terminate)
+
+    html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
+    all_tokens = find_tokens(html)
+
     # if closeAll == 'True':
     #     closeAllTransactions()
     # elif wallet is not '':
@@ -284,11 +302,10 @@ def main():
     #     print(time_now)
     #     process = Broker()
     #     process.run()
-    html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
-    all_tokens = find_tokens(html)
-    process = Broker()
-    process.run()
-    # buy("0xbba24300490443bb0e344bf6ec11bac3aa91df72")
+
+    # process = Broker()
+    # process.run()
+    buy("0xbba24300490443bb0e344bf6ec11bac3aa91df72")
 
 
 
