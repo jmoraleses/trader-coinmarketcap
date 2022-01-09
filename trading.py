@@ -2,6 +2,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import time
 from multiprocessing import Process
 import pandas as pd
 import requests
@@ -142,9 +143,8 @@ class Broker(object):
 
                         # comprobamos si existe alguna operación anterior sobre el token
                         last_operation = 'nothing'
-                        if file.find('_operations') == -1:
-                            name_file_operations = file.replace('.csv', '')
-                            name_file_operations += "_operations.csv"
+                        if os.path.isfile(os.path.join('csv/operations/', file.replace('.csv', '')+'_operations.csv')):
+                            name_file_operations = file.replace('.csv', '')+"_operations.csv"
                             if os.path.isfile(name_file_operations):
                                 df_operations = pd.read_csv(name_file_operations, index_col=0)
                                 if df_operations.iloc[-1]['operation'] == 'buy':
@@ -159,6 +159,9 @@ class Broker(object):
                 # print("start")
                 [x.start() for x in processes]
                 # [x.join() for x in processes]
+
+            else:
+                time.sleep(1)
 
 
 def getABI():
@@ -234,13 +237,13 @@ def buy(token_name, token_url):
             time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
             data = pd.json_normalize(
                 {'time': time_now, 'name': token_name, 'operation': 'buy', 'coins': coins, 'token_url': token_url})
-            if os.path.isfile("csv/" + token_name + "_operations.csv"):
-                df = pd.read_csv("csv/" + token_name + "_operations.csv", index_col=0)
+            if os.path.isfile("csv/operations/" + token_name + "_operations.csv"):
+                df = pd.read_csv("csv/operations/" + token_name + "_operations.csv", index_col=0)
                 df = df.append(data, ignore_index=True)
-                df.to_csv("csv/" + token_name + "_operations.csv")
+                df.to_csv("csv/operations/" + token_name + "_operations.csv")
             else:
                 df = pd.DataFrame(data)
-                df.to_csv("csv/" + token_name + "_operations.csv")
+                df.to_csv("csv/operations/" + token_name + "_operations.csv")
 
             print('{} Sell {}: {}'.format(time_now, token_name, coins))
             return True
@@ -304,7 +307,7 @@ def sell(token_name, token_url, coins):
 
 def closeTransaction(token_name):
     # si existe el archivo de operaciones continuar
-    filename = "csv/" + token_name + "_operations.csv"
+    filename = "csv/operations/" + token_name + "_operations.csv"
     if os.path.isfile(filename):
         df = pd.read_csv(filename, index_col=0)
         if df.iloc[-1]['operation'] == 'buy':
@@ -319,11 +322,11 @@ def closeTransaction(token_name):
             data = pd.json_normalize(
                 {'time': time_now, 'name': token_name, 'operation': 'sell', 'coins': coins, 'token_url': token_url})
             df = df.append(data, ignore_index=True)
-            df.to_csv("csv/" + token_name + "_operations.csv")
+            df.to_csv("csv/operations/" + token_name + "_operations.csv")
 
 
 def closeAllTransactions():
-    files = os.listdir('csv/')
+    files = os.listdir('csv/operations/')
     for file in files:
         if file.endswith("_operations.csv"):
             closeTransaction(file.replace('_operations.csv', ''))
@@ -356,6 +359,11 @@ def main():
     # private_key = str(args.private_key)
     # closeAll = bool(args.terminate)
     closeAll = False ###
+
+    if not os.path.exists("csv"):
+        os.makedirs("csv")
+    if not os.path.exists("csv/operations"):
+        os.makedirs("csv/operations")
 
     html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
     all_tokens = find_tokens(html)
