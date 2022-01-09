@@ -50,16 +50,6 @@ def parse_args():
 
 class Broker(object):
 
-    # params = (
-    #     ('range', 7),
-    #     ('price_relative_range', 0.85),
-    #     ('volume_relative_range', 1.0),
-    #     ('percentage', 250),
-    #     ('percentage_lost', 35),
-    #     ('precio_relativo_negativo', 1.4),
-    #     ('precio_relativo_num', -2),
-    # )
-
     def __init__(self, *args, **kwargs):
         global capital
         self.range = 12
@@ -156,21 +146,6 @@ class Broker(object):
                 # [x.join() for x in processes]
 
 
-def closeAllTransactions():
-    pass
-
-
-def closeTransaction(name_file):
-    # si existe el archivo de operaciones continuar
-    filename = "csv/" + name_file + "_operations.csv"
-    if os.path.isfile(filename):
-        df = pd.read_csv(filename, index_col=0)
-        if df.iloc[-1]['operation'] == 'buy':
-            token_url = df.iloc[-1]['token_url']
-            sell(name_file, token_url)
-            os.remove("csv/" + name_file + ".csv")
-
-
 def getABI():
     # Get ABI from BSCscan
     bsc = "https://bsc-dataseed.binance.org/"
@@ -263,8 +238,36 @@ def buy(token_name, token_url):
         return False
 
 
-def sell(eur, url):
+def sell(token_name, token_url):
     pass
+
+
+
+
+def closeTransaction(name_file):
+    # si existe el archivo de operaciones continuar
+    filename = "csv/" + name_file + "_operations.csv"
+    if os.path.isfile(filename):
+        df = pd.read_csv(filename, index_col=0)
+        if df.iloc[-1]['operation'] == 'buy':
+            token_url = df.iloc[-1]['token_url']
+            coins = df.iloc[-1]['coins']
+            # sell token
+            sell(name_file, token_url)
+            #delete file
+            os.remove("csv/" + name_file + ".csv")
+            # guardar en el archivo transacciones la venta
+            time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
+            data = pd.json_normalize({'time': time_now, 'name': name_file, 'operation': 'sell', 'coins': coins, 'token_url': token_url})
+            df = df.append(data, ignore_index=True)
+            df.to_csv("csv/" + name_file + "_operations.csv")
+
+
+def closeAllTransactions():
+    files = os.listdir('csv/')
+    for file in files:
+        if file.endswith("_operations.csv"):
+            closeTransaction(file.replace('_operations.csv',''))
 
 
 def find_tokens(broken_html):
