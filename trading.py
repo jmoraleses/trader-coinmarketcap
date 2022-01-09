@@ -14,7 +14,7 @@ capital = None
 address = None
 private_key = None
 position_open = 0
-position_max = 4
+position_max = 4 # cantidad total de transacciones permitidas al mismo tiempo
 all_tokens = []
 
 def parse_args():
@@ -69,19 +69,19 @@ class Broker(object):
         self.precio_relativo_n = 0
         self.capital_lost = 0
         self.i = 0
-        self.buying = False
-        self.finish = False
         self.capital = capital
 
 
-    def trading(self, df, token):
-
+    def trading(self, df, token, last_operation):
+        global position_max
+        global position_open
         self.data = df
         self.datasize = df.index.max()
         self.volume_ini = df.iloc[0]['volume'].astype(float)
         self.token = token
         self.token_url = df.iloc[-1]['url_token']
         self.price_min = df['price'].iloc[[0, self.range]].mean()
+        self.last_operation = last_operation
 
         if 0.001 > self.price_min > 0.000001:
             if self.data.index.max() >= self.range:
@@ -89,19 +89,21 @@ class Broker(object):
                 self.precio_relativo = self.data.iloc[-1 - self.range]['price'] / self.data.iloc[-1]['price']
                 self.volumen_relativo = self.data.iloc[-1 - self.range]['volume'] / self.data.iloc[-1]['volume']
 
-                if 220000 < self.volume_ini < 3000000 and self.finish is False:
-                    if self.precio_relativo <= self.price_relative_range and self.volumen_relativo <= self.volume_relative_range and self.buying is False:
-                        self.buying = True
+                if 220000 < self.volume_ini < 3000000: # and self.finish is False:
+                    if self.precio_relativo <= self.price_relative_range and self.volumen_relativo <= self.volume_relative_range and self.last_operation == "nothing":
+
                         self.coins = self.capital / self.data.iloc[-1]['price']
                         self.capital_win = self.capital + (self.capital * (self.percentage / 100))
                         # self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
                         # call buy
-                        print("buy")
-                        buy(self.token, self.token_url)
+                        if position_open < position_max:
+                            print("buy")
+                            buy(self.token, self.token_url)
                         return
                         #
 
-                    if self.buying is True:
+                    if self.last_operation == "buy":
+
                         self.precio_relativo_n = self.data.iloc[-1 - self.precio_relativo_num]['price'] / \
                                                  self.data.iloc[-1]['price']
                         self.capital_now = self.data.iloc[-1]['price'] * self.coins
@@ -111,10 +113,9 @@ class Broker(object):
                         # self.capital_before = self.capital_now
 
                         if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win:
-                            self.finish = True
                             # call sell
                             print("sell")
-
+                            sell(self.token, self.token_url)
                             return
                             #
         ###
@@ -137,8 +138,22 @@ class Broker(object):
 
                 for file in files:
                     if os.path.isfile(os.path.join('csv/', file)):
+
+                        # comprobamos si existe alguna operación anterior sobre el token
+                        if file.find('_operations') == -1:
+                            name_file_operations = file.replace('.csv', '')
+                            name_file_operations += "_operations.csv"
+                            if os.path.isfile(name_file_operations):
+                                df_operations = pd.read_csv(name_file_operations, index_col=0)
+                                if df_operations.iloc[-1]['operation'] == 'buy':
+                                    last_operation = 'buy'
+                                elif df_operations.iloc[-1]['operation'] == 'sell':
+                                    last_operation = 'sell'
+                        else:
+                            last_operation = 'nothing'
+
                         data.append(pd.read_csv("csv/" + file, index_col=0))
-                        processes.append(Process(target=self.trading, args=(data[i], file,)))
+                        processes.append(Process(target=self.trading, args=(data[i], file, last_operation, )))
                         i += 1
 
                 print("start")
@@ -175,17 +190,15 @@ def buy(token_name, token_url):
 
     bsc = "https://bsc-dataseed.binance.org/"
     web3 = Web3(Web3.HTTPProvider(bsc))
-
     # This is global Pancake V2 Swap router address
     router_pancake_address = "0x10ED43C718714eb63d5aA57B78B54704E256024E"
-
     PancakeABI = open('pancakeABI.txt', 'r').read()
     # getABI() # not used
     # print(PancakeABI)
 
     # always spend using Wrapped BNB
     # I guess you want to use other coins to swap you can do that, but for me I used Wrapped BNB
-    spend = web3.toChecksumAddress("0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82") #now cake  # Wrapped BNB token 0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c
+    spend = web3.toChecksumAddress("0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c") # Wrapped BNB token 0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c
     # Print out your balances just for checking
     balance = web3.eth.get_balance(sender_address)
     print(balance)
