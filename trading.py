@@ -1,14 +1,13 @@
 import argparse
 import datetime as dt
+import json
 import os
-import pprint
+import time
 from multiprocessing import Process
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from web3 import Web3
-import time, json
-
 import coinmarketcap
 
 capital = None
@@ -223,7 +222,7 @@ def buy(token_name, token_url):
     contract_id = web3.toChecksumAddress("0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c") #token_url #Contract id is the new token we are swaping to
 
     if position_open < position_max:
-        coins_base = float(balance) / float(position_max - position_open)
+        coins = float(balance) / float(position_max - position_open)
         position_open += 1
 
     try:
@@ -235,7 +234,7 @@ def buy(token_name, token_url):
             (int(time.time()) + 1000000)
         ).buildTransaction({
             'from': sender_address,
-            'value': web3.toWei(coins_base, 'ether'),  # This is the Token(BNB) amount you want to Swap from
+            'value': web3.toWei(coins, 'ether'),  # This is the Token(BNB) amount you want to Swap from
             'gas': 250000,
             'gasPrice': web3.toWei('7', 'gwei'),
             'nonce': nonce,
@@ -247,7 +246,7 @@ def buy(token_name, token_url):
 
         #guardar en csv la fecha, la compra y la cantidad de tokens
         time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
-        data = pd.json_normalize({'time': time_now, 'name': token_name, 'operation': 'buy', 'coins': coins_base, 'token_url': token_url})
+        data = pd.json_normalize({'time': time_now, 'name': token_name, 'operation': 'buy', 'coins': coins, 'token_url': token_url})
         if os.path.isfile("csv/" + token_name + "_operations.csv"):
             df = pd.read_csv("csv/" + token_name + "_operations.csv", index_col=0)
             df = df.append(data, ignore_index=True)
@@ -306,7 +305,7 @@ def main():
 
     # process = Broker()
     # process.run()
-    buy("0xbba24300490443bb0e344bf6ec11bac3aa91df72")
+    buy("Cake", "0xbba24300490443bb0e344bf6ec11bac3aa91df72")
 
 
 
