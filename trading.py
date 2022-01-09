@@ -160,13 +160,14 @@ def closeAllTransactions():
 
 
 def closeTransaction(name_file):
-    # si existe el archivo continuar
+    # si existe el archivo de operaciones continuar
     filename = "csv/" + name_file + "_operations.csv"
     if os.path.isfile(filename):
         df = pd.read_csv(filename, index_col=0)
         if df.iloc[-1]['operation'] == 'buy':
             token_url = df.iloc[-1]['token_url']
             sell(name_file, token_url)
+            os.remove("csv/" + name_file + ".csv")
 
 
 def getABI():
