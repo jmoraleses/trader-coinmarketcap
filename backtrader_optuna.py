@@ -10,9 +10,7 @@ import pandas as pd
 
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
-price_min_range = 0
-rango = 12
-size = 0
+
 data = None
 class Bits(bt.Strategy):
     params = (
@@ -93,6 +91,9 @@ class Bits(bt.Strategy):
         # print('value: {}, cash: {}'.format(str(self.broker.get_value()), str(self.broker.get_cash())))
 
 
+price_min_range = 0
+rango = 12 #12
+size = 0
 def opt_objective(trial):
     global data
     global size
@@ -103,7 +104,7 @@ def opt_objective(trial):
     range_index = trial.suggest_int('range', rango, rango) #12 = 1hrs #7
     price_relative_range = trial.suggest_float('price_relative_range', 0.85, 0.85)
     volume_relative_range = trial.suggest_float('volume_relative_range', 1.0, 1.0)
-    percentage = trial.suggest_int('percentage', 200, 200) #250
+    percentage = trial.suggest_int('percentage', 300, 300) #250
     percentage_lost = trial.suggest_float('percentage_lost', 30, 30) #35
     datasize = trial.suggest_int('datasize', size, size)
     volume_ini = trial.suggest_int('volume_ini', volume_ini, volume_ini)
