@@ -67,11 +67,11 @@ class Bits(bt.Strategy):
 
                 if self.contador == self.range:
                     self.valor_relativo_inicial = self.volumen_relativo / self.precio_relativo
-                    # print(str(self.valor_relativo_inicial))
+                    print(str(self.valor_relativo_inicial))
 
-                if self.finish is False: #220000 < self.volume_ini < 3000000 and
+                if 90000 < self.volume_ini < 3000000 and self.valor_relativo_inicial > 0.1 and self.finish is False:
 
-                    if self.valor_relativo_inicial > 0.1 and self.precio_relativo <= self.price_relative_range and self.precio_relativo >=self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.buying is False:
+                    if self.precio_relativo <= self.price_relative_range and self.precio_relativo >=self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.buying is False:
 
                         self.coins = self.capital / self.data.open
                         self.buying = True
