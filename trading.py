@@ -93,8 +93,8 @@ class Broker(object):
             self.price_min = df['price'].iloc[[0, self.range]].mean()
             if 0.001 > self.price_min > 0.000001:
 
-                self.precio_relativo = self.data.iloc[-1 - self.range]['price'] / self.data.iloc[-1]['price']
-                self.volumen_relativo = self.data.iloc[-1 - self.range]['volume'] / self.data.iloc[-1]['volume']
+                self.precio_relativo = self.data.iloc[-self.range]['price'] / self.data.iloc[-1]['price']
+                self.volumen_relativo = self.data.iloc[-self.range]['volume'] / self.data.iloc[-1]['volume']
 
                 if 220000 < self.volume_ini < 3000000:
                     # buy
@@ -112,7 +112,7 @@ class Broker(object):
                     # sell
                     if self.last_operation == "buy":
 
-                        self.precio_relativo_n = self.data.iloc[-1 - self.precio_relativo_num]['price'] / \
+                        self.precio_relativo_n = self.data.iloc[self.precio_relativo_num]['price'] / \
                                                  self.data.iloc[-1]['price']
                         self.capital_now = self.data.iloc[-1]['price'] * self.coins
 
@@ -153,7 +153,7 @@ class Broker(object):
                         last_operation = 'nothing'
                         name_file_operations = file.replace('.csv', '') + "_operations.csv"
                         if os.path.isfile(os.path.join('csv/operations/', name_file_operations)):
-                            df_operations = pd.read_csv(name_file_operations, index_col=0)
+                            df_operations = pd.read_csv('csv/operations/'+name_file_operations, index_col=0)
                             if df_operations.iloc[-1]['operation'] == 'buy':
                                 last_operation = 'buy'
                             elif df_operations.iloc[-1]['operation'] == 'sell':
@@ -364,15 +364,15 @@ def main():
     # capital = float(args.capital)
     # address = str(args.address)
     # private_key = str(args.private_key)
-    # closeAll = bool(args.terminate)
-    closeAll = False ###
+    # terminate = bool(args.terminate)
+    terminate = False ###
 
     if not os.path.exists("csv"):
         os.makedirs("csv")
     if not os.path.exists("csv/operations"):
         os.makedirs("csv/operations")
 
-    if closeAll is True:
+    if terminate is True:
         pass ###
         # closeAllTransactions()
     elif address is not '' and private_key is not '' and capital > 0.0:
