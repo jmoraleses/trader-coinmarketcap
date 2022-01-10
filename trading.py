@@ -64,6 +64,7 @@ class Broker(object):
         self.percentage_lost = 35
         self.precio_relativo_negativo = 1.4
         self.precio_relativo_num = -2
+        self.price_relative_range_minimum = 0.4
         self.volumen_relativo = 0
         self.precio_relativo = 0
         self.coins = 0
@@ -99,7 +100,7 @@ class Broker(object):
 
                 if 220000 < self.volume_ini < 3000000:
                     # buy
-                    if self.precio_relativo <= self.price_relative_range and self.volumen_relativo <= self.volume_relative_range and self.last_operation is "nothing" and self.last_operation is not 'buy':
+                    if self.precio_relativo <= self.price_relative_range and self.precio_relativo >= self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.last_operation is "nothing" and self.last_operation is not 'buy':
 
                         self.coins = self.capital / self.data.iloc[-1]['price']
                         self.capital_win = self.capital + (self.capital * (self.percentage / 100))
@@ -139,14 +140,17 @@ class Broker(object):
                 i = 0
                 data = []
                 processes = []
-                files = os.listdir('csv/')
 
+                files = os.listdir('csv/')
                 for file_dead in files:
                     name_file = file_dead.replace(' ', '-').replace('.csv', '').replace('.', '')
                     if name_file not in all_tokens:
                         # cerrar operaciones abiertas de un token si ya no existe en la lista
                         closeTransaction(name_file, 0)
-                        print("Se ha cerrado la operacion de: {} por desaparecer de la lista".format(name_file))
+                        # if name_file is not "":
+                            # delete file
+                            # os.remove("csv/" + name_file + ".csv")
+                            # print("Se ha cerrado la operacion y eliminado el archivo csv de: {} por desaparecer de la lista".format(name_file))
 
                 for file in files:
                     if os.path.isfile(os.path.join('csv/', file)):
@@ -343,8 +347,7 @@ def closeTransaction(token_name, price):
             coins = df_close.iloc[-1]['coins']
             # sell token
             sell(token_name, token_url, coins, price)
-            # delete file
-            # os.remove("csv/" + token_name + ".csv") ###
+
 
 
 
