@@ -90,6 +90,7 @@ class Broker(object):
 
 
         if self.datasize >= self.range:
+
             self.price_min = df['price'].iloc[[0, self.range]].mean()
             if 0.001 > self.price_min > 0.000001:
 
@@ -112,8 +113,7 @@ class Broker(object):
                     # sell
                     if self.last_operation == "buy":
 
-                        self.precio_relativo_n = self.data.iloc[self.precio_relativo_num]['price'] / \
-                                                 self.data.iloc[-1]['price']
+                        self.precio_relativo_n = self.data.iloc[self.precio_relativo_num]['price'] / self.data.iloc[-1]['price']
                         self.capital_now = self.data.iloc[-1]['price'] * self.coins
 
                         # if self.capital_now > self.capital_before:
@@ -151,9 +151,9 @@ class Broker(object):
 
                         # comprobamos si existe alguna operación anterior sobre el token
                         last_operation = 'nothing'
-                        name_file_operations = file.replace('.csv', '') + "_operations.csv"
-                        if os.path.isfile(os.path.join('csv/operations/', name_file_operations)):
-                            df_operations = pd.read_csv('csv/operations/'+name_file_operations, index_col=0)
+                        name_file_operations = 'csv/operations/' + file.replace('.csv', '') + "_operations.csv"
+                        if os.path.isfile(name_file_operations):
+                            df_operations = pd.read_csv(name_file_operations, index_col=0)
                             if df_operations.iloc[-1]['operation'] == 'buy':
                                 last_operation = 'buy'
                             elif df_operations.iloc[-1]['operation'] == 'sell':
@@ -366,6 +366,10 @@ def main():
     # private_key = str(args.private_key)
     # terminate = bool(args.terminate)
     terminate = False ###
+
+    # Comprobamos los tokens del listado
+    html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
+    all_tokens = find_tokens(html)
 
     if not os.path.exists("csv"):
         os.makedirs("csv")
