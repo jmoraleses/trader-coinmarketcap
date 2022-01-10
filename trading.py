@@ -94,7 +94,7 @@ class Broker(object):
         if self.datasize >= self.range:
 
             self.price_min = df['price'].iloc[[0, self.range]].mean()
-            if 0.001 > self.price_min > 0.000001:
+            if 0.001 > self.price_min > 0.00002:
 
                 self.precio_relativo = self.data.iloc[-self.range]['price'] / self.data.iloc[-1]['price']
                 self.volumen_relativo = self.data.iloc[-self.range]['volume'] / self.data.iloc[-1]['volume']
