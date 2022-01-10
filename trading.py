@@ -18,6 +18,7 @@ position_max = 4  # cantidad total de transacciones permitidas al mismo tiempo
 all_tokens = []
 
 
+
 #closeTransaction
 #parse_args
 #closeAll in main()

@@ -72,6 +72,7 @@ class Bits(bt.Strategy):
                 if self.finish is False: #220000 < self.volume_ini < 3000000 and
 
                     if self.valor_relativo_inicial > 0.1 and self.precio_relativo <= self.price_relative_range and self.precio_relativo >=self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.buying is False:
+
                         self.coins = self.capital / self.data.open
                         self.buying = True
                         self.capital_win = self.capital + (self.capital * (self.percentage / 100))
