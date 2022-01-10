@@ -59,17 +59,23 @@ class Bits(bt.Strategy):
 
 
     def next(self):
+        # if True:
+        if 0.001 > self.price_min > 0.00002:
 
-        if 0.001 > self.price_min > 0.000001:
             if 0 <= self.contador - self.range < self.datasize:
                 self.precio_relativo = self.data.open[-self.range] / self.data.open
                 self.volumen_relativo = self.data.volume[-self.range] / self.data.volume
 
-                if self.contador == self.range:
-                    self.valor_relativo_inicial = self.volumen_relativo / self.precio_relativo
-                    print(str(self.valor_relativo_inicial))
 
-                if 90000 < self.volume_ini < 3000000 and self.valor_relativo_inicial > 0.1 and self.finish is False:
+                if self.contador == self.range:
+                    self.valor_relativo = self.volumen_relativo / self.precio_relativo
+                    print(str(self.valor_relativo))
+
+                if self.valor_relativo > 0.75: ###
+                    self.percentage = 80
+
+                # if self.finish is False:
+                if 90000 < self.volume_ini < 3000000 and self.valor_relativo > 0.1 and self.finish is False:
 
                     if self.precio_relativo <= self.price_relative_range and self.precio_relativo >=self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.buying is False:
 
@@ -83,11 +89,11 @@ class Bits(bt.Strategy):
                         self.precio_relativo_n = self.data.open[self.precio_relativo_num] / self.data.open
                         self.capital_now = self.data.open * self.coins
 
-                        # if self.capital_now > self.capital_before:
-                        #     self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
-                        # self.capital_before = self.capital_now
+                        if self.capital_now > self.capital_before:
+                            self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
+                        self.capital_before = self.capital_now
 
-                        if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win: # or self.capital_now <= self.capital_lost:
+                        if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win or self.capital_now <= self.capital_lost:
                             self.order = self.close()
                             self.finish = True
 
@@ -114,7 +120,7 @@ def opt_objective(trial):
     price_relative_range_minimum = trial.suggest_float('price_relative_range_minimum', 0.40, 0.40)
     volume_relative_range = trial.suggest_float('volume_relative_range', 1.0, 1.0)
     percentage = trial.suggest_int('percentage', 300, 300) #250
-    percentage_lost = trial.suggest_float('percentage_lost', 35, 35) #35
+    percentage_lost = trial.suggest_float('percentage_lost', 30, 30) #35
     datasize = trial.suggest_int('datasize', size, size)
     volume_ini = trial.suggest_int('volume_ini', volume_ini, volume_ini)
     precio_relativo_negativo = trial.suggest_float('precio_relativo_negativo', 1.40, 1.40) #1.40
