@@ -100,6 +100,9 @@ class Broker(object):
                 self.volumen_relativo = self.data.iloc[-self.range]['volume'] / self.data.iloc[-1]['volume']
                 self.valor_relativo_inicial = (self.data.iloc[0]['volume'] / self.data.iloc[self.range]['volume']) / (self.data.iloc[0]['price'] / self.data.iloc[self.range]['price'])
 
+                if self.valor_relativo_inicial > 0.75:
+                    self.percentage = 80
+
                 if 30000 < self.volume_ini < 3000000 and self.valor_relativo_inicial > 0.1:
                     # buy
                     if self.precio_relativo <= self.price_relative_range and self.precio_relativo >= self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.last_operation is "nothing" and self.last_operation is not 'buy':
