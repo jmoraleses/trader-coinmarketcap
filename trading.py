@@ -130,10 +130,11 @@ class Broker(object):
     def run(self):
         global all_tokens
         while True:
-            # if True:
+
             if dt.datetime.now().minute % 30 == 0 and dt.datetime.now().second <= 1:
                 html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
                 all_tokens = find_tokens(html)
+            # if True:
             if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
                 i = 0
                 data = []
@@ -145,6 +146,7 @@ class Broker(object):
                     if name_file not in all_tokens:
                         # cerrar operaciones abiertas de un token si ya no existe en la lista
                         closeTransaction(name_file, 0)
+                        print("Se ha cerrado la operacion de: {} por desaparecer de la lista".format(name_file))
 
                 for file in files:
                     if os.path.isfile(os.path.join('csv/', file)):
@@ -198,6 +200,8 @@ def buy(token_name, token_url, price):
     web3 = Web3(Web3.HTTPProvider(bsc))
     # This is global Pancake V2 Swap router address
     router_pancake_address = "0x10ED43C718714eb63d5aA57B78B54704E256024E"
+
+    # Asignamos el contrato de pancakeSwap
     PancakeABI = open('pancakeABI.txt', 'r').read()
     # getABI() # not used
     # print(PancakeABI)
@@ -245,12 +249,12 @@ def buy(token_name, token_url, price):
             data = pd.json_normalize(
                 {'time': time_now, 'name': token_name, 'operation': 'buy', 'coins': coins, 'price': price, 'token_url': token_url})
             if os.path.isfile("csv/operations/" + token_name + "_operations.csv"):
-                df = pd.read_csv("csv/operations/" + token_name + "_operations.csv", index_col=0)
-                df = df.append(data, ignore_index=True)
-                df.to_csv("csv/operations/" + token_name + "_operations.csv")
+                df_buy = pd.read_csv("csv/operations/" + token_name + "_operations.csv", index_col=0)
+                df_buy = df_buy.append(data, ignore_index=True)
+                df_buy.to_csv("csv/operations/" + token_name + "_operations.csv")
             else:
-                df = pd.DataFrame(data)
-                df.to_csv("csv/operations/" + token_name + "_operations.csv")
+                df_buy = pd.DataFrame(data)
+                df_buy.to_csv("csv/operations/" + token_name + "_operations.csv")
 
             print('{} Buy {}: {} {}'.format(time_now, token_name, coins, price))
             return True
@@ -270,6 +274,8 @@ def sell(token_name, token_url, coins, price):
     web3 = Web3(Web3.HTTPProvider(bsc))
     # This is global Pancake V2 Swap router address
     router_pancake_address = "0x10ED43C718714eb63d5aA57B78B54704E256024E"
+
+    # Asignamos el contrato de pancakeSwap
     PancakeABI = open('pancakeABI.txt', 'r').read()
     # getABI() # not used
     # print(PancakeABI)
@@ -312,12 +318,12 @@ def sell(token_name, token_url, coins, price):
              'token_url': token_url})
 
         if os.path.isfile("csv/operations/" + token_name + "_operations.csv"):
-            df = pd.read_csv("csv/operations/" + token_name + "_operations.csv", index_col=0)
-            df = df.append(data, ignore_index=True)
-            df.to_csv("csv/operations/" + token_name + "_operations.csv")
+            df_sell = pd.read_csv("csv/operations/" + token_name + "_operations.csv", index_col=0)
+            df_sell = df_sell.append(data, ignore_index=True)
+            df_sell.to_csv("csv/operations/" + token_name + "_operations.csv")
         else:
-            df = pd.DataFrame(data)
-            df.to_csv("csv/operations/" + token_name + "_operations.csv")
+            df_sell = pd.DataFrame(data)
+            df_sell.to_csv("csv/operations/" + token_name + "_operations.csv")
 
         return True
 
@@ -331,10 +337,10 @@ def closeTransaction(token_name, price):
     # si existe el archivo de operaciones continuar
     filename = "csv/operations/" + token_name + "_operations.csv"
     if os.path.isfile(filename):
-        df = pd.read_csv(filename, index_col=0)
-        if df.iloc[-1]['operation'] == 'buy':
-            token_url = df.iloc[-1]['token_url']
-            coins = df.iloc[-1]['coins']
+        df_close = pd.read_csv(filename, index_col=0)
+        if df_close.iloc[-1]['operation'] == 'buy':
+            token_url = df_close.iloc[-1]['token_url']
+            coins = df_close.iloc[-1]['coins']
             # sell token
             sell(token_name, token_url, coins, price)
             # delete file
