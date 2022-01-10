@@ -67,6 +67,7 @@ class Broker(object):
         self.price_relative_range_minimum = 0.4
         self.volumen_relativo = 0
         self.precio_relativo = 0
+        self.valor_relativo_inicial = 0
         self.coins = 0
         self.capital_win = 0
         self.capital_now = 0
@@ -97,10 +98,11 @@ class Broker(object):
 
                 self.precio_relativo = self.data.iloc[-self.range]['price'] / self.data.iloc[-1]['price']
                 self.volumen_relativo = self.data.iloc[-self.range]['volume'] / self.data.iloc[-1]['volume']
+                self.valor_relativo_inicial = (self.data.iloc[0]['volume'] / self.data.iloc[self.range]['volume']) / (self.data.iloc[0]['price'] / self.data.iloc[self.range]['price'])
 
-                if 220000 < self.volume_ini < 3000000:
+                if True: #220000 < self.volume_ini < 3000000:
                     # buy
-                    if self.precio_relativo <= self.price_relative_range and self.precio_relativo >= self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.last_operation is "nothing" and self.last_operation is not 'buy':
+                    if self.valor_relativo_inicial > 0.1 and self.precio_relativo <= self.price_relative_range and self.precio_relativo >= self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.last_operation is "nothing" and self.last_operation is not 'buy':
 
                         self.coins = self.capital / self.data.iloc[-1]['price']
                         self.capital_win = self.capital + (self.capital * (self.percentage / 100))
@@ -147,7 +149,7 @@ class Broker(object):
                     if name_file not in all_tokens:
                         # cerrar operaciones abiertas de un token si ya no existe en la lista
                         closeTransaction(name_file, 0)
-                        # if name_file is not "":
+                        # if name_file is not "": ###
                             # delete file
                             # os.remove("csv/" + name_file + ".csv")
                             # print("Se ha cerrado la operacion y eliminado el archivo csv de: {} por desaparecer de la lista".format(name_file))
