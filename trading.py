@@ -106,7 +106,7 @@ class Broker(object):
                         # self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
                         # call buy
                         if position_open < position_max:
-                            buy(self.token, self.token_url)
+                            buy(self.token, self.token_url, self.data.iloc[-1]['price'])
                         return
                     #
 
@@ -122,7 +122,7 @@ class Broker(object):
 
                         if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win: # or self.capital_now <= self.capital_lost:
                             # call close transaction (sell)
-                            closeTransaction(self.token)
+                            closeTransaction(self.token, self.data.iloc[-1]['price'])
                             return
                     #
         ###
@@ -144,7 +144,7 @@ class Broker(object):
                     name_file = file_dead.replace(' ', '-').replace('.csv', '').replace('.', '')
                     if name_file not in all_tokens:
                         # cerrar operaciones abiertas de un token si ya no existe en la lista
-                        closeTransaction(name_file)
+                        closeTransaction(name_file, 0)
 
                 for file in files:
                     if os.path.isfile(os.path.join('csv/', file)):
@@ -188,7 +188,7 @@ def getABI():
     file.close()
 
 
-def buy(token_name, token_url):
+def buy(token_name, token_url, price):
     global address
     global private_key
     global position_open
@@ -243,7 +243,7 @@ def buy(token_name, token_url):
             # Guardar en csv la fecha, la compra y la cantidad de tokens
             time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
             data = pd.json_normalize(
-                {'time': time_now, 'name': token_name, 'operation': 'buy', 'coins': coins, 'token_url': token_url})
+                {'time': time_now, 'name': token_name, 'operation': 'buy', 'coins': coins, 'price': price, 'token_url': token_url})
             if os.path.isfile("csv/operations/" + token_name + "_operations.csv"):
                 df = pd.read_csv("csv/operations/" + token_name + "_operations.csv", index_col=0)
                 df = df.append(data, ignore_index=True)
@@ -252,7 +252,7 @@ def buy(token_name, token_url):
                 df = pd.DataFrame(data)
                 df.to_csv("csv/operations/" + token_name + "_operations.csv")
 
-            print('{} Buy {}: {}'.format(time_now, token_name, coins))
+            print('{} Buy {}: {} {}'.format(time_now, token_name, coins, price))
             return True
 
     except ValueError:
@@ -261,7 +261,7 @@ def buy(token_name, token_url):
         return False
 
 
-def sell(token_name, token_url, coins):
+def sell(token_name, token_url, coins, price):
     global address
     global private_key
     global position_open
@@ -302,8 +302,23 @@ def sell(token_name, token_url, coins):
         # tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
         # print('Sell {} tx: {}'.format(token_name, web3.toHex(tx_token)))
         time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
-        print('{} Sell {}: {}'.format(time_now, token_name, coins))
+        print('{} Sell {}: {} {}'.format(time_now, token_name, coins, price))
         position_open -= 1
+
+        # guardar en el archivo transacciones la venta
+        time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
+        data = pd.json_normalize(
+            {'time': time_now, 'name': token_name, 'operation': 'sell', 'coins': coins, 'price': price,
+             'token_url': token_url})
+
+        if os.path.isfile("csv/operations/" + token_name + "_operations.csv"):
+            df = pd.read_csv("csv/operations/" + token_name + "_operations.csv", index_col=0)
+            df = df.append(data, ignore_index=True)
+            df.to_csv("csv/operations/" + token_name + "_operations.csv")
+        else:
+            df = pd.DataFrame(data)
+            df.to_csv("csv/operations/" + token_name + "_operations.csv")
+
         return True
 
     except ValueError:
@@ -312,7 +327,7 @@ def sell(token_name, token_url, coins):
         return False
 
 
-def closeTransaction(token_name):
+def closeTransaction(token_name, price):
     # si existe el archivo de operaciones continuar
     filename = "csv/operations/" + token_name + "_operations.csv"
     if os.path.isfile(filename):
@@ -321,22 +336,17 @@ def closeTransaction(token_name):
             token_url = df.iloc[-1]['token_url']
             coins = df.iloc[-1]['coins']
             # sell token
-            sell(token_name, token_url, coins)
+            sell(token_name, token_url, coins, price)
             # delete file
             # os.remove("csv/" + token_name + ".csv") ###
-            # guardar en el archivo transacciones la venta
-            time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
-            data = pd.json_normalize(
-                {'time': time_now, 'name': token_name, 'operation': 'sell', 'coins': coins, 'token_url': token_url})
-            df = df.append(data, ignore_index=True)
-            df.to_csv("csv/operations/" + token_name + "_operations.csv")
+
 
 
 def closeAllTransactions():
     files = os.listdir('csv/operations/')
     for file in files:
         if file.endswith("_operations.csv"):
-            closeTransaction(file.replace('_operations.csv', ''))
+            closeTransaction(file.replace('_operations.csv', ''), 0)
 
 
 def find_tokens(broken_html):
