@@ -61,7 +61,7 @@ class Broker(object):
         self.price_relative_range = 0.85
         self.volume_relative_range = 1.0
         self.percentage = 300
-        self.percentage_lost = 10
+        self.percentage_lost = 35
         self.precio_relativo_negativo = 1.4
         self.precio_relativo_num = -2
         self.volumen_relativo = 0
@@ -131,6 +131,9 @@ class Broker(object):
         global all_tokens
         while True:
             # if True:
+            if dt.datetime.now().minute % 30 == 0 and dt.datetime.now().second <= 1:
+                html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
+                all_tokens = find_tokens(html)
             if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
                 i = 0
                 data = []
@@ -368,9 +371,6 @@ def main():
         os.makedirs("csv")
     if not os.path.exists("csv/operations"):
         os.makedirs("csv/operations")
-
-    html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
-    all_tokens = find_tokens(html)
 
     if closeAll is True:
         pass ###
