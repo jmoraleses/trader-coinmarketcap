@@ -13,7 +13,7 @@ import coinmarketcap
 capital = 100.0
 # address = None
 # private_key = None
-position_open = 0
+position_open = 1
 position_max = 4  # cantidad total de transacciones permitidas al mismo tiempo
 all_tokens = []
 
@@ -100,38 +100,37 @@ class Broker(object):
                 self.volumen_relativo = self.data.iloc[-self.range]['volume'] / self.data.iloc[-1]['volume']
                 self.valor_relativo_inicial = (self.data.iloc[0]['volume'] / self.data.iloc[self.range]['volume']) / (self.data.iloc[0]['price'] / self.data.iloc[self.range]['price'])
 
-                if self.valor_relativo_inicial > 0.50:
 
-                    if 1.0 > self.valor_relativo_inicial > 0.75:
-                        self.percentage = 85
+                if 1.0 > self.valor_relativo_inicial > 0.75:
+                    self.percentage = 85
 
-                    if self.volume_ini < 3000000 and self.valor_relativo_inicial > 0.1 and self.valor_relativo_inicial < 1.15:
-                        # buy
-                        if self.precio_relativo <= self.price_relative_range and self.precio_relativo >= self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.last_operation is "nothing" and self.last_operation is not 'buy':
+                if self.valor_relativo_inicial > 0.50 and self.volume_ini < 3000000 and self.valor_relativo_inicial > 0.1 and self.valor_relativo_inicial < 1.15:
+                    # buy
+                    if self.precio_relativo <= self.price_relative_range and self.precio_relativo >= self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.last_operation is "nothing" and self.last_operation is not 'buy':
 
-                            self.coins = self.capital / self.data.iloc[-1]['price']
-                            self.capital_win = self.capital + (self.capital * (self.percentage / 100))
-                            # self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
-                            # call buy
-                            if position_open < position_max:
-                                buy(self.token, self.token_url, self.data.iloc[-1]['price'])
+                        self.coins = self.capital / self.data.iloc[-1]['price']
+                        self.capital_win = self.capital + (self.capital * (self.percentage / 100))
+                        # self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
+                        # call buy
+                        if position_open < position_max:
+                            buy(self.token, self.token_url, self.data.iloc[-1]['price'])
+                        return
+                    #
+
+                    # sell
+                    if self.last_operation == "buy":
+
+                        self.precio_relativo_n = self.data.iloc[self.precio_relativo_num]['price'] / self.data.iloc[-1]['price']
+                        self.capital_now = self.data.iloc[-1]['price'] * self.coins
+
+                        if self.capital_now > self.capital_before:
+                            self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
+                        self.capital_before = self.capital_now
+
+                        if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win or self.capital_now <= self.capital_lost:
+                            # call close transaction (sell)
+                            closeTransaction(self.token, self.data.iloc[-1]['price'])
                             return
-                        #
-
-                        # sell
-                        if self.last_operation == "buy":
-
-                            self.precio_relativo_n = self.data.iloc[self.precio_relativo_num]['price'] / self.data.iloc[-1]['price']
-                            self.capital_now = self.data.iloc[-1]['price'] * self.coins
-
-                            if self.capital_now > self.capital_before:
-                                self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
-                            self.capital_before = self.capital_now
-
-                            if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win or self.capital_now <= self.capital_lost:
-                                # call close transaction (sell)
-                                closeTransaction(self.token, self.data.iloc[-1]['price'])
-                                return
                 #
         ###
 
