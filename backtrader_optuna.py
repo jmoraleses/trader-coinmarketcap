@@ -70,31 +70,33 @@ class Bits(bt.Strategy):
                     self.valor_relativo_inicial = self.volumen_relativo / self.precio_relativo
                     print(str(self.valor_relativo_inicial))
 
-                if 1.0 > self.valor_relativo_inicial > 0.75:
-                    self.percentage = 85
+                if self.valor_relativo_inicial > 0.50:
+
+                    if 1.0 > self.valor_relativo_inicial > 0.75:
+                        self.percentage = 85
 
 
-                if self.volume_ini < 3000000 and self.valor_relativo_inicial > 0.1 and self.valor_relativo_inicial < 1.05 and self.finish is False:
+                    if self.volume_ini < 3000000 and self.valor_relativo_inicial > 0.1 and self.valor_relativo_inicial < 1.05 and self.finish is False:
 
-                    if self.precio_relativo <= self.price_relative_range and self.precio_relativo >=self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.buying is False:
+                        if self.precio_relativo <= self.price_relative_range and self.precio_relativo >=self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.buying is False:
 
-                        self.coins = self.capital / self.data.open
-                        self.buying = True
-                        self.capital_win = self.capital + (self.capital * (self.percentage / 100))
-                        self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
-                        self.order = self.buy(size=self.coins, price=self.data.open)
+                            self.coins = self.capital / self.data.open
+                            self.buying = True
+                            self.capital_win = self.capital + (self.capital * (self.percentage / 100))
+                            self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
+                            self.order = self.buy(size=self.coins, price=self.data.open)
 
-                    if self.buying is True:
-                        self.precio_relativo_n = self.data.open[self.precio_relativo_num] / self.data.open
-                        self.capital_now = self.data.open * self.coins
+                        if self.buying is True:
+                            self.precio_relativo_n = self.data.open[self.precio_relativo_num] / self.data.open
+                            self.capital_now = self.data.open * self.coins
 
-                        if self.capital_now > self.capital_before:
-                            self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
-                        self.capital_before = self.capital_now
+                            if self.capital_now > self.capital_before:
+                                self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
+                            self.capital_before = self.capital_now
 
-                        if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win or self.capital_now <= self.capital_lost:
-                            self.order = self.close()
-                            self.finish = True
+                            if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win or self.capital_now <= self.capital_lost:
+                                self.order = self.close()
+                                self.finish = True
 
             self.contador += 1
 
@@ -201,3 +203,4 @@ if __name__ == '__main__':
     # optuna_search("DogeWhisky")
     # optuna_search("Metaland-DAO")
     # optuna_search("YmplePay")
+    # optuna_search("Supermetaverse")

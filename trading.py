@@ -100,37 +100,39 @@ class Broker(object):
                 self.volumen_relativo = self.data.iloc[-self.range]['volume'] / self.data.iloc[-1]['volume']
                 self.valor_relativo_inicial = (self.data.iloc[0]['volume'] / self.data.iloc[self.range]['volume']) / (self.data.iloc[0]['price'] / self.data.iloc[self.range]['price'])
 
-                if 1.0 > self.valor_relativo_inicial > 0.75:
-                    self.percentage = 85
+                if self.valor_relativo_inicial > 0.50:
 
-                if self.volume_ini < 3000000 and self.valor_relativo_inicial > 0.1 and self.valor_relativo_inicial < 1.15:
-                    # buy
-                    if self.precio_relativo <= self.price_relative_range and self.precio_relativo >= self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.last_operation is "nothing" and self.last_operation is not 'buy':
+                    if 1.0 > self.valor_relativo_inicial > 0.75:
+                        self.percentage = 85
 
-                        self.coins = self.capital / self.data.iloc[-1]['price']
-                        self.capital_win = self.capital + (self.capital * (self.percentage / 100))
-                        # self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
-                        # call buy
-                        if position_open < position_max:
-                            buy(self.token, self.token_url, self.data.iloc[-1]['price'])
-                        return
-                    #
+                    if self.volume_ini < 3000000 and self.valor_relativo_inicial > 0.1 and self.valor_relativo_inicial < 1.15:
+                        # buy
+                        if self.precio_relativo <= self.price_relative_range and self.precio_relativo >= self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.last_operation is "nothing" and self.last_operation is not 'buy':
 
-                    # sell
-                    if self.last_operation == "buy":
-
-                        self.precio_relativo_n = self.data.iloc[self.precio_relativo_num]['price'] / self.data.iloc[-1]['price']
-                        self.capital_now = self.data.iloc[-1]['price'] * self.coins
-
-                        if self.capital_now > self.capital_before:
-                            self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
-                        self.capital_before = self.capital_now
-
-                        if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win or self.capital_now <= self.capital_lost:
-                            # call close transaction (sell)
-                            closeTransaction(self.token, self.data.iloc[-1]['price'])
+                            self.coins = self.capital / self.data.iloc[-1]['price']
+                            self.capital_win = self.capital + (self.capital * (self.percentage / 100))
+                            # self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
+                            # call buy
+                            if position_open < position_max:
+                                buy(self.token, self.token_url, self.data.iloc[-1]['price'])
                             return
-                    #
+                        #
+
+                        # sell
+                        if self.last_operation == "buy":
+
+                            self.precio_relativo_n = self.data.iloc[self.precio_relativo_num]['price'] / self.data.iloc[-1]['price']
+                            self.capital_now = self.data.iloc[-1]['price'] * self.coins
+
+                            if self.capital_now > self.capital_before:
+                                self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
+                            self.capital_before = self.capital_now
+
+                            if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win or self.capital_now <= self.capital_lost:
+                                # call close transaction (sell)
+                                closeTransaction(self.token, self.data.iloc[-1]['price'])
+                                return
+                #
         ###
 
     def run(self):
@@ -145,18 +147,7 @@ class Broker(object):
                 i = 0
                 data = []
                 processes = []
-
                 files = os.listdir('csv/')
-                for file_dead in files:
-                    name_file = file_dead.replace(' ', '-').replace('.csv', '').replace('.', '')
-                    if name_file not in all_tokens:
-                        # cerrar operaciones abiertas de un token si ya no existe en la lista
-                        closeTransaction(name_file, 0)
-                        # if name_file is not "": ###
-                            # delete file
-                            # os.remove("csv/" + name_file + ".csv")
-                            # print("Se ha cerrado la operacion y eliminado el archivo csv de: {} por desaparecer de la lista".format(name_file))
-
                 for file in files:
                     if os.path.isfile(os.path.join('csv/', file)):
 
@@ -354,13 +345,23 @@ def closeTransaction(token_name, price):
             sell(token_name, token_url, coins, price)
 
 
-
-
 def closeAllTransactions():
     files = os.listdir('csv/operations/')
     for file in files:
         if file.endswith("_operations.csv"):
             closeTransaction(file.replace('_operations.csv', ''), 0)
+
+
+# def delete_files_dead():
+#     global all_tokens
+#     files = os.listdir('csv/')
+#     for file_dead in files:
+#         name_file = file_dead.replace(' ', '-').replace('.csv', '').replace('.', '')
+#         if name_file not in all_tokens:
+#             # delete file
+#             os.remove("csv/" + name_file + ".csv")
+#             print("Se ha cerrado la operacion y eliminado el archivo csv de: {} por desaparecer de la lista".format(name_file))
+
 
 
 def find_tokens(broken_html):
