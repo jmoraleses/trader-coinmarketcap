@@ -70,10 +70,11 @@ class Bits(bt.Strategy):
                     self.valor_relativo_inicial = self.volumen_relativo / self.precio_relativo
                     print(str(self.valor_relativo_inicial))
 
-                if self.valor_relativo_inicial > 0.75: ###
+                if 1.0 > self.valor_relativo_inicial > 0.75:
                     self.percentage = 85
 
-                if self.volume_ini < 300000 and self.valor_relativo_inicial > 0.1 and self.valor_relativo_inicial < 1.05 and self.finish is False:
+
+                if self.volume_ini < 3000000 and self.valor_relativo_inicial > 0.1 and self.valor_relativo_inicial < 1.05 and self.finish is False:
 
                     if self.precio_relativo <= self.price_relative_range and self.precio_relativo >=self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.buying is False:
 
