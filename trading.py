@@ -62,7 +62,7 @@ class Broker(object):
         self.volume_relative_range = 1.0
         self.percentage = 300
         self.percentage_lost = 30
-        self.precio_relativo_negativo = 1.4
+        self.precio_relativo_negativo = 1.42
         self.precio_relativo_num = -2
         self.price_relative_range_minimum = 0.4
         self.volume_relative_range_minimum = 0.1
@@ -128,7 +128,7 @@ class Broker(object):
                             self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
                         self.capital_before = self.capital_now
 
-                        if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win or self.capital_now <= self.capital_lost:
+                        if self.data.iloc[-1]['price'] > 0 and self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win or self.capital_now <= self.capital_lost:
                             # call close transaction (sell)
                             closeTransaction(self.token, self.data.iloc[-1]['price'])
                             return

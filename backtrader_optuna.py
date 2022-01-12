@@ -80,7 +80,7 @@ class Bits(bt.Strategy):
 
                 if self.volume_ini < 3000000 and self.valor_relativo_inicial > 0.5 and self.valor_relativo_inicial < 1.05 and self.finish is False:
 
-                    if self.precio_relativo <= self.price_relative_range and self.precio_relativo >=self.price_relative_range_minimum and self.volumen_relativo >= self.volume_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.buying is False:
+                    if self.precio_relativo <= self.price_relative_range and self.precio_relativo >=self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.volumen_relativo >= self.volume_relative_range_minimum and self.buying is False:
 
                         self.coins = self.capital / self.data.open
                         self.buying = True
@@ -96,7 +96,8 @@ class Bits(bt.Strategy):
                             self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
                         self.capital_before = self.capital_now
 
-                        if self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win or self.capital_now <= self.capital_lost:
+                        if self.data.open > 0 and self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win or self.capital_now <= self.capital_lost:
+
                             self.order = self.close()
                             self.finish = True
 
@@ -127,7 +128,7 @@ def opt_objective(trial):
     percentage_lost = trial.suggest_float('percentage_lost', 30, 30) #35
     datasize = trial.suggest_int('datasize', size, size)
     volume_ini = trial.suggest_int('volume_ini', volume_ini, volume_ini)
-    precio_relativo_negativo = trial.suggest_float('precio_relativo_negativo', 1.40, 1.40) #1.40
+    precio_relativo_negativo = trial.suggest_float('precio_relativo_negativo', 1.42, 1.42) #1.40
     precio_relativo_num = trial.suggest_int('precio_relativo_num', -2, -2)
     price_min_range = trial.suggest_float('price_min', price_min_range, price_min_range)
 
