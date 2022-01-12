@@ -61,10 +61,11 @@ class Broker(object):
         self.price_relative_range = 0.85
         self.volume_relative_range = 1.0
         self.percentage = 300
-        self.percentage_lost = 35
+        self.percentage_lost = 30
         self.precio_relativo_negativo = 1.4
         self.precio_relativo_num = -2
         self.price_relative_range_minimum = 0.4
+        self.volume_relative_range_minimum = 0.1
         self.volumen_relativo = 0
         self.precio_relativo = 0
         self.valor_relativo_inicial = 0
@@ -104,9 +105,9 @@ class Broker(object):
                 if 1.0 > self.valor_relativo_inicial > 0.75:
                     self.percentage = 85
 
-                if self.valor_relativo_inicial > 0.50 and self.volume_ini < 3000000 and self.valor_relativo_inicial > 0.1 and self.valor_relativo_inicial < 1.15:
+                if self.volume_ini < 3000000 and self.valor_relativo_inicial > 0.5 and self.valor_relativo_inicial < 1.05:
                     # buy
-                    if self.precio_relativo <= self.price_relative_range and self.precio_relativo >= self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.last_operation is "nothing" and self.last_operation is not 'buy':
+                    if self.precio_relativo <= self.price_relative_range and self.precio_relativo >= self.price_relative_range_minimum and self.volumen_relativo >= self.volume_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.last_operation is "nothing" and self.last_operation is not 'buy':
 
                         self.coins = self.capital / self.data.iloc[-1]['price']
                         self.capital_win = self.capital + (self.capital * (self.percentage / 100))
