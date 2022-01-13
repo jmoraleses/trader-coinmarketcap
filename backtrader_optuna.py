@@ -68,18 +68,33 @@ class Bits(bt.Strategy):
                 self.precio_relativo = self.data.open[-self.range] / self.data.open
                 self.volumen_relativo = self.data.volume[-self.range] / self.data.volume
 
+
                 if self.contador == self.range:
-                    self.valor_relativo_inicial = self.volumen_relativo / self.precio_relativo
-                    # print(str(self.valor_relativo_inicial))
-                    print(str(self.volumen_relativo))
 
+                    if self.volumen_relativo > 0:
+                        self.valor_relativo_inicial = self.volumen_relativo / self.precio_relativo
 
-                if 1.0 > self.valor_relativo_inicial > 0.75:
+                    elif self.volumen_relativo == 0:
+                        self.valor_relativo_inicial = 0
+
+                    print(str(self.valor_relativo_inicial))
+
+                if self.valor_relativo_inicial > 1.0:
+                    self.percentage = 600
+                if 0.90 > self.valor_relativo_inicial >= 0.95:
                     self.percentage = 85
+                if 0.95 > self.valor_relativo_inicial >= 0.92:
+                    self.percentage = 35
+                if 0.92 > self.valor_relativo_inicial >= 0.89:
+                    self.percentage = 10
+                if 0.89 > self.valor_relativo_inicial >= 0.85:
+                    self.percentage = 5
 
 
-                if self.volume_ini < 3000000 and self.valor_relativo_inicial > 0.5 and self.valor_relativo_inicial < 1.05 and self.finish is False:
+                #(60000 < self.volume_ini or 200 > self.volume_ini)
+                if ((0.60 > self.valor_relativo_inicial > 0.50) or (1.01 > self.valor_relativo_inicial > 0.78)) and self.volume_ini < 3000000 and self.finish is False: #and self.valor_relativo_inicial > 0.5 and self.valor_relativo_inicial < 1.05
 
+                    # if True:
                     if self.precio_relativo <= self.price_relative_range and self.precio_relativo >=self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.volumen_relativo >= self.volume_relative_range_minimum and self.buying is False:
 
                         self.coins = self.capital / self.data.open
@@ -97,9 +112,9 @@ class Bits(bt.Strategy):
                         self.capital_before = self.capital_now
 
                         if self.data.open > 0 and self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win or self.capital_now <= self.capital_lost:
-
                             self.order = self.close()
                             self.finish = True
+
 
             self.contador += 1
 
@@ -119,8 +134,8 @@ def opt_objective(trial):
     global rango
     global price_min_range
 
-    range_index = trial.suggest_int('range', rango, rango) #12 = 1hrs #7
-    price_relative_range = trial.suggest_float('price_relative_range', 0.85, 0.85)
+    range_index = trial.suggest_int('range', rango, rango) #12 = 1hrs #12
+    price_relative_range = trial.suggest_float('price_relative_range', 0.95, 0.95)
     price_relative_range_minimum = trial.suggest_float('price_relative_range_minimum', 0.40, 0.40)
     volume_relative_range = trial.suggest_float('volume_relative_range', 1.0, 1.0)
     volume_relative_range_minimum = trial.suggest_float('volume_relative_range_minimum', 0.1, 0.1)
@@ -128,7 +143,7 @@ def opt_objective(trial):
     percentage_lost = trial.suggest_float('percentage_lost', 30, 30) #35
     datasize = trial.suggest_int('datasize', size, size)
     volume_ini = trial.suggest_int('volume_ini', volume_ini, volume_ini)
-    precio_relativo_negativo = trial.suggest_float('precio_relativo_negativo', 1.42, 1.42) #1.40
+    precio_relativo_negativo = trial.suggest_float('precio_relativo_negativo', 1.45, 1.45) #1.40
     precio_relativo_num = trial.suggest_int('precio_relativo_num', -2, -2)
     price_min_range = trial.suggest_float('price_min', price_min_range, price_min_range)
 
@@ -208,3 +223,4 @@ if __name__ == '__main__':
     # optuna_search("Metaland-DAO")
     # optuna_search("YmplePay")
     # optuna_search("Supermetaverse")
+    # optuna_search("Shiba-Hunter")
