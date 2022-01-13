@@ -71,7 +71,7 @@ class Bits(bt.Strategy):
 
                 if self.contador == self.range:
 
-                    if self.volumen_relativo > 0:
+                    if self.volumen_relativo != 0:
                         self.valor_relativo_inicial = self.volumen_relativo / self.precio_relativo
 
                     elif self.volumen_relativo == 0:

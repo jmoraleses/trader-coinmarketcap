@@ -100,12 +100,11 @@ class Broker(object):
 
                 self.precio_relativo = self.data.iloc[-self.range]['price'] / self.data.iloc[-1]['price']
                 self.volumen_relativo = self.data.iloc[-self.range]['volume'] / self.data.iloc[-1]['volume']
-                self.valor_relativo_inicial = (self.data.iloc[0]['volume'] / self.data.iloc[self.range]['volume']) / (self.data.iloc[0]['price'] / self.data.iloc[self.range]['price'])
-
-                # if 1.0 > self.valor_relativo_inicial > 0.75:
-                #     self.percentage = 85
-                if self.volumen_relativo == 0:
+                if self.volumen_relativo != 0:
+                    self.valor_relativo_inicial = (self.data.iloc[0]['volume'] / self.data.iloc[self.range]['volume']) / (self.data.iloc[0]['price'] / self.data.iloc[self.range]['price'])
+                elif self.volumen_relativo == 0:
                     self.valor_relativo_inicial = 0
+
 
                 if self.valor_relativo_inicial > 1.0:
                     self.percentage = 600
@@ -126,7 +125,7 @@ class Broker(object):
                     if self.precio_relativo <= self.price_relative_range and self.precio_relativo >= self.price_relative_range_minimum and self.volumen_relativo >= self.volume_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.last_operation is "nothing" and self.last_operation is not 'buy':
 
                         self.coins = self.capital / self.data.iloc[-1]['price']
-                        # call buy
+                        # call (buy)
                         if position_open < position_max:
                             buy(self.token, self.token_url, self.data.iloc[-1]['price'], self.coins)
                         return
@@ -145,7 +144,7 @@ class Broker(object):
                             # call close transaction (sell)
                             closeTransaction(self.token, self.data.iloc[-1]['price'])
                             return
-                #
+                    #
         ###
 
     def run(self):
