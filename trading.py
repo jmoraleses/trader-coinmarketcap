@@ -56,7 +56,6 @@ def parse_args():
 class Broker(object):
 
     def __init__(self, *args, **kwargs):
-        global capital
         self.range = 12
         self.price_relative_range = 0.85
         self.volume_relative_range = 1.0
@@ -78,10 +77,10 @@ class Broker(object):
         self.capital_lost = 0
         self.capital_before = 0
         self.i = 0
-        self.capital = capital
+        self.capital = 0
 
 
-    def trading(self, df, token, last_operation):
+    def trading(self, df, token, last_operation, last_coins_operation, last_price_operation, capital):
         global position_max
         global position_open
         self.data = df
@@ -90,7 +89,9 @@ class Broker(object):
         self.token = token
         self.token_url = df.iloc[-1]['url_token']
         self.last_operation = last_operation
-
+        self.last_coins_operation = last_coins_operation
+        self.last_price_operation = last_price_operation
+        self.capital = capital
 
         if self.datasize >= self.range:
 
@@ -101,20 +102,33 @@ class Broker(object):
                 self.volumen_relativo = self.data.iloc[-self.range]['volume'] / self.data.iloc[-1]['volume']
                 self.valor_relativo_inicial = (self.data.iloc[0]['volume'] / self.data.iloc[self.range]['volume']) / (self.data.iloc[0]['price'] / self.data.iloc[self.range]['price'])
 
+                # if 1.0 > self.valor_relativo_inicial > 0.75:
+                #     self.percentage = 85
+                if self.volumen_relativo == 0:
+                    self.valor_relativo_inicial = 0
 
-                if 1.0 > self.valor_relativo_inicial > 0.75:
+                if self.valor_relativo_inicial > 1.0:
+                    self.percentage = 600
+                if 0.90 > self.valor_relativo_inicial >= 0.95:
                     self.percentage = 85
+                if 0.95 > self.valor_relativo_inicial >= 0.92:
+                    self.percentage = 35
+                if 0.92 > self.valor_relativo_inicial >= 0.89:
+                    self.percentage = 10
+                if 0.89 > self.valor_relativo_inicial >= 0.85:
+                    self.percentage = 5
 
-                if self.volume_ini < 3000000 and self.valor_relativo_inicial > 0.5 and self.valor_relativo_inicial < 1.05:
+
+                if ((0.60 > self.valor_relativo_inicial > 0.50) or (1.01 > self.valor_relativo_inicial > 0.78)) and self.volume_ini < 3000000:
+                # if self.volume_ini < 3000000 and self.valor_relativo_inicial > 0.5 and self.valor_relativo_inicial < 1.05:
+
                     # buy
                     if self.precio_relativo <= self.price_relative_range and self.precio_relativo >= self.price_relative_range_minimum and self.volumen_relativo >= self.volume_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.last_operation is "nothing" and self.last_operation is not 'buy':
 
                         self.coins = self.capital / self.data.iloc[-1]['price']
-                        self.capital_win = self.capital + (self.capital * (self.percentage / 100))
-                        # self.capital_lost = self.capital - (self.capital * (self.percentage_lost / 100))
                         # call buy
                         if position_open < position_max:
-                            buy(self.token, self.token_url, self.data.iloc[-1]['price'])
+                            buy(self.token, self.token_url, self.data.iloc[-1]['price'], self.coins)
                         return
                     #
 
@@ -122,11 +136,10 @@ class Broker(object):
                     if self.last_operation == "buy":
 
                         self.precio_relativo_n = self.data.iloc[self.precio_relativo_num]['price'] / self.data.iloc[-1]['price']
-                        self.capital_now = self.data.iloc[-1]['price'] * self.coins
-
-                        if self.capital_now > self.capital_before:
-                            self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
-                        self.capital_before = self.capital_now
+                        self.capital_now = self.data.iloc[-1]['price'] * self.last_coins_operation
+                        self.capital_before = self.last_price_operation * self.last_coins_operation
+                        self.capital_win = self.capital_before + (self.capital_before * (self.percentage / 100))
+                        self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
 
                         if self.data.iloc[-1]['price'] > 0 and self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win or self.capital_now <= self.capital_lost:
                             # call close transaction (sell)
@@ -137,13 +150,14 @@ class Broker(object):
 
     def run(self):
         global all_tokens
+        global capital
         while True:
 
-            if dt.datetime.now().minute % 30 == 0 and dt.datetime.now().second <= 1:
+            if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
                 html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
                 all_tokens = find_tokens(html)
             # if True:
-            if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
+            if dt.datetime.now().second <= 1:
                 i = 0
                 data = []
                 processes = []
@@ -153,16 +167,22 @@ class Broker(object):
 
                         # comprobamos si existe alguna operación anterior sobre el token
                         last_operation = 'nothing'
+                        last_coins_operation = 0
+                        last_price_operation = 0
+                        capital_play = 0
+                        if position_open < position_max:
+                            capital_play = float(capital) / float(position_max)
                         name_file_operations = 'csv/operations/' + file.replace('.csv', '') + "_operations.csv"
                         if os.path.isfile(name_file_operations):
                             df_operations = pd.read_csv(name_file_operations, index_col=0)
+                            last_price_operation = df_operations.iloc[-1]['price']
                             if df_operations.iloc[-1]['operation'] == 'buy':
                                 last_operation = 'buy'
                             elif df_operations.iloc[-1]['operation'] == 'sell':
                                 last_operation = 'sell'
 
                         data.append(pd.read_csv("csv/" + file, index_col=0))
-                        processes.append(Process(target=self.trading, args=(data[i], file.replace('.csv', ''), last_operation,)))
+                        processes.append(Process(target=self.trading, args=(data[i], file.replace('.csv', ''), last_operation, last_coins_operation, last_price_operation, capital_play)))
                         i += 1
 
                 # print("start")
@@ -190,7 +210,7 @@ def getABI():
     file.close()
 
 
-def buy(token_name, token_url, price):
+def buy(token_name, token_url, price, coins):
     global address
     global private_key
     global position_open
@@ -223,7 +243,6 @@ def buy(token_name, token_url, price):
     try:
 
         if position_open < position_max:
-            coins = float(balance - (balance / 10)) / float(position_max - position_open)
             position_open += 1
 
             # # Create the transaction
