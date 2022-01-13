@@ -79,20 +79,25 @@ class Bits(bt.Strategy):
 
                     print(str(self.valor_relativo_inicial))
 
-                if self.valor_relativo_inicial > 1.0:
+                if self.valor_relativo_inicial >= 1.0:
                     self.percentage = 600
-                if 0.90 > self.valor_relativo_inicial >= 0.95:
-                    self.percentage = 85
+                if 1.0 > self.valor_relativo_inicial >= 0.98:
+                    self.percentage = 300
+                if 0.98 > self.valor_relativo_inicial >= 0.95:
+                    self.percentage = 75
                 if 0.95 > self.valor_relativo_inicial >= 0.92:
                     self.percentage = 35
                 if 0.92 > self.valor_relativo_inicial >= 0.89:
                     self.percentage = 10
                 if 0.89 > self.valor_relativo_inicial >= 0.85:
                     self.percentage = 5
-
+                if 0.85 > self.valor_relativo_inicial >= 0.60:
+                    self.finish = True
+                if self.valor_relativo_inicial == 0:
+                    self.percentage = 3000
 
                 #(60000 < self.volume_ini or 200 > self.volume_ini)
-                if ((0.60 > self.valor_relativo_inicial > 0.50) or (1.01 > self.valor_relativo_inicial > 0.78)) and self.volume_ini < 3000000 and self.finish is False: #and self.valor_relativo_inicial > 0.5 and self.valor_relativo_inicial < 1.05
+                if ((1.01 > self.valor_relativo_inicial > 0.50) or self.valor_relativo_inicial==0) and self.volume_ini < 3000000 and self.finish is False: #and self.valor_relativo_inicial > 0.5 and self.valor_relativo_inicial < 1.05
 
                     # if True:
                     if self.precio_relativo <= self.price_relative_range and self.precio_relativo >=self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.volumen_relativo >= self.volume_relative_range_minimum and self.buying is False:
