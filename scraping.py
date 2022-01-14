@@ -60,21 +60,21 @@ def tokens_relative(tokens):
             df5 = pd.DataFrame(data)
             df5.to_csv("csv/" + token + "_relative.csv")
             ###
-    # average 1 hora
-    if (df5.index >= 12):
-        data2 = pd.json_normalize({'time': time_now_ticker, 'name': token,
-                                   'price_relative_average': df5['price_relative'].iloc[-12].mean(),
-                                   'volume_relative_average': df5['volume_relative'].iloc[-12].mean()})
-        df8 = pd.DataFrame(data2)
-        df8.to_csv("csv/" + token + "_relative_1h.csv")
+            # average 1 hora
+            if (df5.index >= 12):
+                data2 = pd.json_normalize({'time': time_now_ticker, 'name': token,
+                                           'price_relative_average': df5['price_relative'].iloc[-12].mean(),
+                                           'volume_relative_average': df5['volume_relative'].iloc[-12].mean()})
+                df8 = pd.DataFrame(data2)
+                df8.to_csv("csv/" + token + "_relative_1h.csv")
 
-    # average 2 hora
-    if (df5.index >= 24):
-        data3 = pd.json_normalize({'time': time_now_ticker, 'name': token,
-                                   'price_relative_average': df5['price_relative'].iloc[-24].mean(),
-                                   'volume_relative_average': df5['volume_relative'].iloc[-24].mean()})
-        df9 = pd.DataFrame(data3)
-        df9.to_csv("csv/" + token + "_relative_2h.csv")
+            # average 2 hora
+            if (df5.index >= 24):
+                data3 = pd.json_normalize({'time': time_now_ticker, 'name': token,
+                                           'price_relative_average': df5['price_relative'].iloc[-24].mean(),
+                                           'volume_relative_average': df5['volume_relative'].iloc[-24].mean()})
+                df9 = pd.DataFrame(data3)
+                df9.to_csv("csv/" + token + "_relative_2h.csv")
 
 
 all_tokens = []
