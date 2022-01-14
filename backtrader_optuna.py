@@ -26,6 +26,7 @@ class Bits(bt.Strategy):
         ('price_min_range', 1),
         ('price_relative_range_minimum', 1),
         ('volume_relative_range_minimum', 1),
+        ('numero', 1),
     )
 
     def __init__(self):
@@ -41,6 +42,7 @@ class Bits(bt.Strategy):
         self.price_min = self.params.price_min_range
         self.price_relative_range_minimum = self.params.price_relative_range_minimum
         self.volume_relative_range_minimum = self.params.volume_relative_range_minimum
+        self.numero = self.params.numero
         self.contador = 0
         self.breaking = False
         self.buying = False
@@ -62,11 +64,19 @@ class Bits(bt.Strategy):
 
     def next(self):
         # if True:
-        if 0.001 > self.price_min:# > 0.00002:
+        if 0.000000001 > self.price_min > 0.000000000001:
 
             if 0 <= self.contador - self.range < self.datasize:
+
+                # if self.contador + self.range >= 12:
+                #     self.precio_relativo = self.data.open[-12] / self.data.open
+                #     self.volumen_relativo = self.data.volume[-12] / self.data.volume
+                #     # print(self.precio_relativo)
+                #     # print(self.volumen_relativo)
+                # else:
                 self.precio_relativo = self.data.open[-self.range] / self.data.open
                 self.volumen_relativo = self.data.volume[-self.range] / self.data.volume
+
 
 
                 if self.contador == self.range:
@@ -79,28 +89,33 @@ class Bits(bt.Strategy):
 
                     print(str(self.valor_relativo_inicial))
 
-                if self.valor_relativo_inicial >= 1.0:
-                    self.percentage = 600
-                if 1.0 > self.valor_relativo_inicial >= 0.98:
-                    self.percentage = 300
-                if 0.98 > self.valor_relativo_inicial >= 0.95:
-                    self.percentage = 75
-                if 0.95 > self.valor_relativo_inicial >= 0.92:
-                    self.percentage = 35
-                if 0.92 > self.valor_relativo_inicial >= 0.89:
-                    self.percentage = 10
-                if 0.89 > self.valor_relativo_inicial >= 0.85:
-                    self.percentage = 5
-                if 0.85 > self.valor_relativo_inicial >= 0.60:
-                    self.finish = True
-                if self.valor_relativo_inicial == 0:
-                    self.percentage = 3000
+                    # if self.valor_relativo_inicial >= 1.2:
+                    #     self.percentage = 500
+                    # if 1.2 > self.valor_relativo_inicial >= 1.15:
+                    #     self.percentage = 100
+                    # if 1.15 > self.valor_relativo_inicial >= 1.09:
+                    #     self.percentage = 100
+                    # if 1.09 > self.valor_relativo_inicial >= 0.98:
+                    #     self.percentage = 200
+                    # if 0.98 > self.valor_relativo_inicial >= 0.95:
+                    #     self.percentage = 1000 #2000
+                    # if 0.95 > self.valor_relativo_inicial >= 0.92:
+                    #     self.percentage = 800
+                    # if 0.92 > self.valor_relativo_inicial >= 0.89:
+                    #     self.percentage = 10
+                    # if 0.89 > self.valor_relativo_inicial >= 0.85:
+                    #     self.percentage = 5
+                    # if 0.85 > self.valor_relativo_inicial >= 0.60:
+                    #     self.finish = True
+                    # if self.valor_relativo_inicial < 0.1:
+                    #     self.percentage = 1000
+
 
                 #(60000 < self.volume_ini or 200 > self.volume_ini)
-                if ((1.01 > self.valor_relativo_inicial > 0.50) or self.valor_relativo_inicial==0) and self.volume_ini < 3000000 and self.finish is False: #and self.valor_relativo_inicial > 0.5 and self.valor_relativo_inicial < 1.05
+                if self.volume_ini < 3000000 and self.finish is False and 1.03 > self.valor_relativo_inicial:
 
                     # if True:
-                    if self.precio_relativo <= self.price_relative_range and self.precio_relativo >=self.price_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.volumen_relativo >= self.volume_relative_range_minimum and self.buying is False:
+                    if self.precio_relativo <= self.price_relative_range and self.precio_relativo >=self.price_relative_range_minimum and ((self.volumen_relativo <= self.volume_relative_range and self.volumen_relativo >= self.volume_relative_range_minimum) or self.volumen_relativo == 0) and self.buying is False:
 
                         self.coins = self.capital / self.data.open
                         self.buying = True
@@ -109,14 +124,19 @@ class Bits(bt.Strategy):
                         self.order = self.buy(size=self.coins, price=self.data.open)
 
                     if self.buying is True:
-                        self.precio_relativo_n = self.data.open[self.precio_relativo_num] / self.data.open
+                        # self.precio_relativo_n = self.data.open[-12] / self.data.open
+                        # print(str(self.precio_relativo_n))
                         self.capital_now = self.data.open * self.coins
 
                         if self.capital_now > self.capital_before:
                             self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
                         self.capital_before = self.capital_now
 
-                        if self.data.open > 0 and self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win or self.capital_now <= self.capital_lost:
+                        if self.capital_now >= self.capital_win:# or self.capital_now <= self.capital_lost: #(self.data.open > 0 and self.precio_relativo_n <= self.precio_relativo_negativo)
+                            print(self.percentage)
+                            # print(self.precio_relativo)
+                            # print(self.volumen_relativo)
+                            # print(self.precio_relativo_n)
                             self.order = self.close()
                             self.finish = True
 
@@ -130,7 +150,7 @@ class Bits(bt.Strategy):
 
 
 price_min_range = 0
-rango = 12
+rango = 5 # 12, 5
 size = 0
 def opt_objective(trial):
     global data
@@ -144,12 +164,13 @@ def opt_objective(trial):
     price_relative_range_minimum = trial.suggest_float('price_relative_range_minimum', 0.40, 0.40)
     volume_relative_range = trial.suggest_float('volume_relative_range', 1.0, 1.0)
     volume_relative_range_minimum = trial.suggest_float('volume_relative_range_minimum', 0.1, 0.1)
-    percentage = trial.suggest_int('percentage', 300, 300) #250
+    percentage = trial.suggest_int('percentage', 3000, 3000) #250
     percentage_lost = trial.suggest_float('percentage_lost', 30, 30) #35
     datasize = trial.suggest_int('datasize', size, size)
     volume_ini = trial.suggest_int('volume_ini', volume_ini, volume_ini)
-    precio_relativo_negativo = trial.suggest_float('precio_relativo_negativo', 1.45, 1.45) #1.40
+    precio_relativo_negativo = trial.suggest_float('precio_relativo_negativo', 1.0, 1.0) #1.40
     precio_relativo_num = trial.suggest_int('precio_relativo_num', -2, -2)
+    numero = trial.suggest_int('numero', 0, 0)
     price_min_range = trial.suggest_float('price_min', price_min_range, price_min_range)
 
     cerebro = bt.Cerebro()
@@ -158,7 +179,7 @@ def opt_objective(trial):
     cerebro.broker.setcash(cash=100.0) # 100€
     # cerebro.addwriter(bt.WriterFile, out='analisis.txt')
     # cerebro.addanalyzer(bt.analyzers.PyFolio, _name='pyfolio')
-    cerebro.addstrategy(Bits, range=range_index, price_relative_range=price_relative_range, volume_relative_range=volume_relative_range, percentage=percentage, percentage_lost=percentage_lost, datasize=datasize, volume_ini=volume_ini, precio_relativo_negativo=precio_relativo_negativo, precio_relativo_num=precio_relativo_num, price_min_range=price_min_range, price_relative_range_minimum=price_relative_range_minimum, volume_relative_range_minimum=volume_relative_range_minimum)
+    cerebro.addstrategy(Bits, range=range_index, price_relative_range=price_relative_range, volume_relative_range=volume_relative_range, percentage=percentage, percentage_lost=percentage_lost, datasize=datasize, volume_ini=volume_ini, precio_relativo_negativo=precio_relativo_negativo, precio_relativo_num=precio_relativo_num, price_min_range=price_min_range, price_relative_range_minimum=price_relative_range_minimum, volume_relative_range_minimum=volume_relative_range_minimum, numero=numero)
     cerebro.adddata(data)
     cerebro.run()
     if float(cerebro.broker.get_value()) != 100.0:
@@ -227,5 +248,5 @@ if __name__ == '__main__':
     # optuna_search("DogeWhisky")
     # optuna_search("Metaland-DAO")
     # optuna_search("YmplePay")
-    # optuna_search("Supermetaverse")
     # optuna_search("Shiba-Hunter")
+    # optuna_search("FirstDog")

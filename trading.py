@@ -59,7 +59,7 @@ class Broker(object):
         self.range = 12
         self.price_relative_range = 0.85
         self.volume_relative_range = 1.0
-        self.percentage = 300
+        self.percentage = 3000
         self.percentage_lost = 30
         self.precio_relativo_negativo = 1.42
         self.precio_relativo_num = -2
@@ -96,7 +96,7 @@ class Broker(object):
         if self.datasize >= self.range:
 
             self.price_min = df['price'].iloc[[0, self.range]].mean()
-            if 0.001 > self.price_min: # > 0.00002:
+            if 0.000000001 > self.price_min > 0.000000000001:
 
                 self.precio_relativo = self.data.iloc[-self.range]['price'] / self.data.iloc[-1]['price']
                 self.volumen_relativo = self.data.iloc[-self.range]['volume'] / self.data.iloc[-1]['volume']
@@ -105,26 +105,25 @@ class Broker(object):
                 elif self.volumen_relativo == 0:
                     self.valor_relativo_inicial = 0
 
-                if self.valor_relativo_inicial >= 1.0:
-                    self.percentage = 600
-                if 1.0 > self.valor_relativo_inicial >= 0.98:
-                    self.percentage = 300
-                if 0.98 > self.valor_relativo_inicial >= 0.95:
-                    self.percentage = 75
-                if 0.95 > self.valor_relativo_inicial >= 0.92:
-                    self.percentage = 35
-                if 0.92 > self.valor_relativo_inicial >= 0.89:
-                    self.percentage = 10
-                if 0.89 > self.valor_relativo_inicial >= 0.85:
-                    self.percentage = 5
-                if 0.85 > self.valor_relativo_inicial >= 0.60:
-                    return
-                if self.valor_relativo_inicial == 0:
-                    self.percentage = 3000
+                # if self.valor_relativo_inicial >= 1.0:
+                #     self.percentage = 600
+                # if 1.0 > self.valor_relativo_inicial >= 0.98:
+                #     self.percentage = 300
+                # if 0.98 > self.valor_relativo_inicial >= 0.95:
+                #     self.percentage = 75
+                # if 0.95 > self.valor_relativo_inicial >= 0.92:
+                #     self.percentage = 35
+                # if 0.92 > self.valor_relativo_inicial >= 0.89:
+                #     self.percentage = 10
+                # if 0.89 > self.valor_relativo_inicial >= 0.85:
+                #     self.percentage = 5
+                # if 0.85 > self.valor_relativo_inicial >= 0.60:
+                #     return
+                # if self.valor_relativo_inicial == 0:
+                #     self.percentage = 3000
 
 
-                if ((1.01 > self.valor_relativo_inicial > 0.50) or self.valor_relativo_inicial==0) and self.volume_ini < 3000000:
-                # if self.volume_ini < 3000000 and self.valor_relativo_inicial > 0.5 and self.valor_relativo_inicial < 1.05:
+                if self.volume_ini < 3000000 and 1.03 > self.valor_relativo_inicial:
 
                     # buy
                     if self.precio_relativo <= self.price_relative_range and self.precio_relativo >= self.price_relative_range_minimum and self.volumen_relativo >= self.volume_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.last_operation is "nothing" and self.last_operation is not 'buy':
@@ -145,7 +144,7 @@ class Broker(object):
                         self.capital_win = self.capital_before + (self.capital_before * (self.percentage / 100))
                         self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
 
-                        if self.data.iloc[-1]['price'] > 0 and self.precio_relativo_n >= self.precio_relativo_negativo or self.capital_now >= self.capital_win or self.capital_now <= self.capital_lost:
+                        if self.capital_now >= self.capital_win:# or self.capital_now <= self.capital_lost:
                             # call close transaction (sell)
                             closeTransaction(self.token, self.data.iloc[-1]['price'])
                             return
@@ -161,7 +160,8 @@ class Broker(object):
                 html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
                 all_tokens = find_tokens(html)
             # if True:
-            if dt.datetime.now().second <= 1:
+            # if dt.datetime.now().second <= 1:
+
                 i = 0
                 data = []
                 processes = []
@@ -393,13 +393,15 @@ def find_tokens(broken_html):
     tbody = soup.find('tbody')
     for row in tbody.find_all('tr'):
         try:
-            img = row.select_one("td > div > img").get('src')
-            if img.find('1839') != -1:
-                name = row.find('a', class_='cmc-link').find('p').text
-                if name not in tokens:
-                    tokens.append(name.replace(' ', '-').replace('.', ''))
+            img = row.select_one("td > div > img")
+            if img is not None:
+                src = img.get('src')
+                if src.find('1839') != -1:
+                    name = row.find('a', class_='cmc-link').find('p').text
+                    if name not in tokens:
+                        tokens.append(name.replace(' ', '-').replace('.', ''))
         except:
-            print('Error al rasrear la lista')
+            print('Error al rasrear la lista para {}'.format(name))
     return tokens
 
 
