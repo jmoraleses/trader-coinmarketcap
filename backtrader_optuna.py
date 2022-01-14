@@ -64,6 +64,7 @@ class Bits(bt.Strategy):
 
     def next(self):
         # if True:
+        # if 1.0 > self.price_min > 0.000000000001:
         if 0.000000001 > self.price_min > 0.000000000001:
 
             if 0 <= self.contador - self.range < self.datasize:
@@ -133,7 +134,7 @@ class Bits(bt.Strategy):
                         self.capital_before = self.capital_now
 
                         if self.capital_now >= self.capital_win:# or self.capital_now <= self.capital_lost: #(self.data.open > 0 and self.precio_relativo_n <= self.precio_relativo_negativo)
-                            print(self.percentage)
+                            # print(self.percentage)
                             # print(self.precio_relativo)
                             # print(self.volumen_relativo)
                             # print(self.precio_relativo_n)
