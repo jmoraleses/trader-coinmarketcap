@@ -113,10 +113,11 @@ class Bits(bt.Strategy):
 
 
                 #(60000 < self.volume_ini or 200 > self.volume_ini)
-                if self.volume_ini < 3000000 and self.finish is False and 1.03 > self.valor_relativo_inicial:
+                if self.volume_ini < 3000000 and self.finish is False and (1.40 > self.valor_relativo_inicial > 0.75 or self.valor_relativo_inicial == 0): # 1.03
 
                     # if True:
-                    if self.precio_relativo <= self.price_relative_range and self.precio_relativo >=self.price_relative_range_minimum and ((self.volumen_relativo <= self.volume_relative_range and self.volumen_relativo >= self.volume_relative_range_minimum) or self.volumen_relativo == 0) and self.buying is False:
+                    if self.buying is False:
+                    # if self.precio_relativo <= self.price_relative_range and self.precio_relativo >=self.price_relative_range_minimum and ((self.volumen_relativo <= self.volume_relative_range and self.volumen_relativo >= self.volume_relative_range_minimum) or self.volumen_relativo == 0) and self.buying is False:
 
                         self.coins = self.capital / self.data.open
                         self.buying = True
