@@ -17,7 +17,6 @@ position_open = 1
 position_max = 4  # cantidad total de transacciones permitidas al mismo tiempo
 all_tokens = []
 
-
 #closeTransaction
 #parse_args
 #closeAll in main()
@@ -57,14 +56,14 @@ class Broker(object):
 
     def __init__(self, *args, **kwargs):
         self.range = 12
-        self.price_relative_range = 0.85
-        self.volume_relative_range = 1.0
+        # self.price_relative_range = 0.85
+        # self.volume_relative_range = 1.0
         self.percentage = 3000
         self.percentage_lost = 30
-        self.precio_relativo_negativo = 1.42
-        self.precio_relativo_num = -2
-        self.price_relative_range_minimum = 0.4
-        self.volume_relative_range_minimum = 0.1
+        # self.precio_relativo_negativo = 1.42
+        # self.precio_relativo_num = -2
+        # self.price_relative_range_minimum = 0.4
+        # self.volume_relative_range_minimum = 0.1
         self.volumen_relativo = 0
         self.precio_relativo = 0
         self.valor_relativo_inicial = 0
@@ -99,39 +98,17 @@ class Broker(object):
 
             if 0.000000001 > self.price_min > 0.000000000001:
 
-                if self.datasize == self.range:
-                    self.precio_relativo = self.data.iloc[-self.range]['price'] / self.data.iloc[-1]['price']
-                    self.volumen_relativo = self.data.iloc[-self.range]['volume'] / self.data.iloc[-1]['volume']
-
-                    if self.volumen_relativo != 0:
-                        self.valor_relativo_inicial = self.volumen_relativo / self.precio_relativo
-                    elif self.volumen_relativo == 0:
-                        self.valor_relativo_inicial = 0
-
-                # if self.valor_relativo_inicial >= 1.0:
-                #     self.percentage = 600
-                # if 1.0 > self.valor_relativo_inicial >= 0.98:
-                #     self.percentage = 300
-                # if 0.98 > self.valor_relativo_inicial >= 0.95:
-                #     self.percentage = 75
-                # if 0.95 > self.valor_relativo_inicial >= 0.92:
-                #     self.percentage = 35
-                # if 0.92 > self.valor_relativo_inicial >= 0.89:
-                #     self.percentage = 10
-                # if 0.89 > self.valor_relativo_inicial >= 0.85:
-                #     self.percentage = 5
-                # if 0.85 > self.valor_relativo_inicial >= 0.60:
-                #     return
-                # if self.valor_relativo_inicial == 0:
-                #     self.percentage = 3000
-
+                self.precio_relativo = self.data.iloc[0]['price'] / self.data.iloc[self.range]['price']
+                self.volumen_relativo = self.data.iloc[0]['volume'] / self.data.iloc[self.range]['volume']
+                if self.volumen_relativo != 0:
+                    self.valor_relativo_inicial = self.volumen_relativo / self.precio_relativo
+                elif self.volumen_relativo == 0:
+                    self.valor_relativo_inicial = 0
 
                 if self.volume_ini < 3000000 and (1.40 > self.valor_relativo_inicial > 0.75 or self.valor_relativo_inicial == 0):
 
                     # buy
                     if self.last_operation is "nothing":
-                    # if self.precio_relativo <= self.price_relative_range and self.precio_relativo >= self.price_relative_range_minimum and self.volumen_relativo >= self.volume_relative_range_minimum and self.volumen_relativo <= self.volume_relative_range and self.last_operation is "nothing" and self.last_operation is not 'buy':
-
                         self.coins = self.capital / self.data.iloc[-1]['price']
                         # call (buy)
                         if position_open < position_max:
@@ -141,8 +118,6 @@ class Broker(object):
 
                     # sell
                     if self.last_operation == "buy":
-
-                        # self.precio_relativo_n = self.data.iloc[self.precio_relativo_num]['price'] / self.data.iloc[-1]['price']
                         self.capital_now = self.data.iloc[-1]['price'] * self.last_coins_operation
                         self.capital_before = self.last_price_operation * self.last_coins_operation
                         self.capital_win = self.capital_before + (self.capital_before * (self.percentage / 100))
@@ -161,10 +136,8 @@ class Broker(object):
         while True:
 
             if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
-                html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
-                all_tokens = find_tokens(html)
-            # if True:
-            # if dt.datetime.now().second <= 1:
+                # html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
+                # all_tokens = find_tokens(html)
 
                 i = 0
                 data = []
@@ -422,8 +395,8 @@ def main():
     terminate = False ###
 
     # Comprobamos los tokens del listado
-    html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
-    all_tokens = find_tokens(html)
+    # html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
+    # all_tokens = find_tokens(html)
 
     if not os.path.exists("csv"):
         os.makedirs("csv")
