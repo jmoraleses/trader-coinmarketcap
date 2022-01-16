@@ -78,6 +78,7 @@ class Broker(object):
         self.capital_before = 0
         self.i = 0
         self.capital = 0
+        self.valor_relativo = 0
 
 
     def trading(self, df, token, last_operation, last_coins_operation, last_price_operation, capital):
@@ -92,14 +93,14 @@ class Broker(object):
         self.last_coins_operation = last_coins_operation
         self.last_price_operation = last_price_operation
         self.capital = capital
-        if self.volume_ini == 0 and self.datasize >= self.range:
-            self.valor_relativo = 0
-        else:
-            self.valor_relativo = (df['volume'].iloc[0] / df['volume'].iloc[self.range]) / (df['price'].iloc[0] / df['price'].iloc[self.range])
 
 
         if self.datasize >= self.range:
 
+            if df.iloc[0]['volume'] == 0 or df.iloc[self.range]['volume'] == 0 or df.iloc[0]['price'] == 0 or df.iloc[self.range]['price'] == 0:
+                self.valor_relativo = 0
+            else:
+                self.valor_relativo = (df['volume'].iloc[0] / df['volume'].iloc[self.range]) / (df['price'].iloc[0] / df['price'].iloc[self.range])
             self.price_min = df['price'].iloc[[0, self.range]].mean()
 
             if 0.000000001 > self.price_min > 0.000000000001:
