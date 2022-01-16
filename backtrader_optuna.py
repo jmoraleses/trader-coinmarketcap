@@ -115,7 +115,7 @@ def opt_objective(trial):
     price_relative_range_minimum = trial.suggest_float('price_relative_range_minimum', 0.40, 0.40)
     volume_relative_range = trial.suggest_float('volume_relative_range', 1.0, 1.0)
     volume_relative_range_minimum = trial.suggest_float('volume_relative_range_minimum', 0.1, 0.1)
-    percentage = trial.suggest_int('percentage', 3000, 3000) #250
+    percentage = trial.suggest_int('percentage', 1000, 1000) #250
     percentage_lost = trial.suggest_float('percentage_lost', 30, 30) #35
     datasize = trial.suggest_int('datasize', size, size)
     volume_ini = trial.suggest_int('volume_ini', volume_ini, volume_ini)
