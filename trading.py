@@ -92,7 +92,7 @@ class Broker(object):
         self.last_coins_operation = last_coins_operation
         self.last_price_operation = last_price_operation
         self.capital = capital
-        if self.volume_ini == 0 and self.datasize > self.range:
+        if self.volume_ini == 0 and self.datasize >= self.range:
             self.valor_relativo = 0
         else:
             self.valor_relativo = (df['volume'].iloc[0] / df['volume'].iloc[self.range]) / (df['price'].iloc[0] / df['price'].iloc[self.range])
