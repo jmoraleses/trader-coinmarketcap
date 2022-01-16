@@ -17,6 +17,7 @@ position_open = 1
 position_max = 4  # cantidad total de transacciones permitidas al mismo tiempo
 all_tokens = []
 
+
 #closeTransaction
 #parse_args
 #closeAll in main()
@@ -55,7 +56,7 @@ def parse_args():
 class Broker(object):
 
     def __init__(self, *args, **kwargs):
-        self.range = 12
+        self.range = 5
         # self.price_relative_range = 0.85
         # self.volume_relative_range = 1.0
         self.percentage = 3000
@@ -91,6 +92,11 @@ class Broker(object):
         self.last_coins_operation = last_coins_operation
         self.last_price_operation = last_price_operation
         self.capital = capital
+        if self.volume_ini == 0:
+            self.valor_relativo = 0
+        else:
+            self.valor_relativo = (df['volume'].iloc[0] / df['volume'].iloc[self.range]) / (df['price'].iloc[0] / df['price'].iloc[self.range])
+
 
         if self.datasize >= self.range:
 
@@ -98,14 +104,7 @@ class Broker(object):
 
             if 0.000000001 > self.price_min > 0.000000000001:
 
-                self.precio_relativo = self.data.iloc[0]['price'] / self.data.iloc[self.range]['price']
-                self.volumen_relativo = self.data.iloc[0]['volume'] / self.data.iloc[self.range]['volume']
-                if self.volumen_relativo != 0:
-                    self.valor_relativo_inicial = self.volumen_relativo / self.precio_relativo
-                elif self.volumen_relativo == 0:
-                    self.valor_relativo_inicial = 0
-
-                if self.volume_ini < 3000000 and (1.40 > self.valor_relativo_inicial > 0.75 or self.valor_relativo_inicial == 0):
+                if self.volume_ini < 3000000 and ((1.40 > self.valor_relativo > 0.75) or self.valor_relativo == 0):
 
                     # buy
                     if self.last_operation is "nothing":

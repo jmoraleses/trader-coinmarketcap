@@ -158,7 +158,10 @@ def optuna_search(token):
         if df.index.max() >= rango:
             price_min_range = df['price'].iloc[[0, rango]].mean()
             size = df.index.max()
-            valor_relativo = (df['volume'].iloc[0] / df['volume'].iloc[rango]) / (df['price'].iloc[0] / df['price'].iloc[rango])
+            if df['volume'].iloc[rango] == 0:
+                valor_relativo = 0
+            else:
+                valor_relativo = (df['volume'].iloc[0] / df['volume'].iloc[rango]) / (df['price'].iloc[0] / df['price'].iloc[rango])
             time_ini = dt.datetime.strptime(df['time'].iloc[0], '%Y-%m-%d %H:%M:%S')
             data = btfeed.GenericCSVData(
                 dataname=filename,
