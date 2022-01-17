@@ -16,6 +16,7 @@ capital = 100.0
 position_open = 1
 position_max = 4  # cantidad total de transacciones permitidas al mismo tiempo
 all_tokens = []
+precio_bnb = 0.0
 
 
 #closeTransaction
@@ -59,7 +60,7 @@ class Broker(object):
         self.range = 5
         # self.price_relative_range = 0.85
         # self.volume_relative_range = 1.0
-        self.percentage = 1000
+        self.percentage = 500
         self.percentage_lost = 30
         # self.precio_relativo_negativo = 1.42
         # self.precio_relativo_num = -2
@@ -109,11 +110,12 @@ class Broker(object):
 
                     # buy
                     if self.last_operation is "nothing":
-                        self.coins = self.capital / self.data.iloc[-1]['price']
-                        # call (buy)
-                        if position_open < position_max:
-                            buy(self.token, self.token_url, self.data.iloc[-1]['price'], self.coins)
-                        return
+                        if self.capital > 0:
+                            self.coins = self.capital / self.data.iloc[-1]['price']
+                            # call (buy)
+                            if position_open < position_max:
+                                buy(self.token, self.token_url, self.data.iloc[-1]['price'], self.coins)
+                            return
                     #
 
                     # sell
@@ -133,7 +135,18 @@ class Broker(object):
     def run(self):
         global all_tokens
         global capital
+        global position_max
+        global position_open
+        global precio_bnb
+        capital_play = 0
+        precio_bnb = float(find_bnb())
+
+
         while True:
+            if dt.datetime.now().minute == 0 and dt.datetime.now().hour % 2 == 0:
+                precio_bnb = float(find_bnb())
+                capital = float(get_balance()) * float(precio_bnb)
+                print('capital: {}'.format(capital))
 
             if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
                 # html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
@@ -150,9 +163,12 @@ class Broker(object):
                         last_operation = 'nothing'
                         last_coins_operation = 0
                         last_price_operation = 0
-                        capital_play = 0
+
                         if position_open < position_max:
-                            capital_play = float(capital) / float(position_max)
+                            capital = float(get_balance()) * float(precio_bnb)
+                            capital_play = float(capital) - float(float(capital)/position_max)
+                        else:
+                            capital_play = 0
                         name_file_operations = 'csv/operations/' + file.replace('.csv', '') + "_operations.csv"
                         if os.path.isfile(name_file_operations):
                             df_operations = pd.read_csv(name_file_operations, index_col=0)
@@ -213,7 +229,6 @@ def buy(token_name, token_url, price, coins):
     balance_ = web3.eth.get_balance(address)
     balance = web3.fromWei(balance_, 'ether')
     # print(balance_)
-    balance = 100.0 ###
     # print(balance)
 
     # Setup the PancakeSwap contract
@@ -333,6 +348,17 @@ def sell(token_name, token_url, coins, price):
         return False
 
 
+
+def get_balance():
+    global address
+    bsc = "https://bsc-dataseed.binance.org/"
+    web3 = Web3(Web3.HTTPProvider(bsc))
+    balance_ = web3.eth.get_balance(address)
+    balance = web3.fromWei(balance_, 'ether')
+    return balance
+
+
+
 def closeTransaction(token_name, price):
     # si existe el archivo de operaciones continuar
     filename = "csv/operations/" + token_name + "_operations.csv"
@@ -350,6 +376,18 @@ def closeAllTransactions():
     for file in files:
         if file.endswith("_operations.csv"):
             closeTransaction(file.replace('_operations.csv', ''), 0)
+
+
+def closeTransactionTokens():
+    global all_tokens
+    tokens = []
+    files = os.listdir('csv/operations/')
+    for file in files:
+        if file.endswith("_operations.csv"):
+            tokens.append(file.replace('_operations.csv', ''))
+    for i in range(len(tokens)):
+        if tokens[i] not in all_tokens:
+            closeTransaction(all_tokens[i], 0)
 
 
 # def delete_files_dead():
@@ -380,6 +418,18 @@ def find_tokens(broken_html):
         except:
             print('Error al rasrear la lista para {}'.format(name))
     return tokens
+
+
+def find_bnb():
+    broken_html = coinmarketcap.requestList("https://www.coingecko.com/es/monedas/binance-coin/usd")
+    soup = BeautifulSoup(broken_html, 'html.parser')
+    tbody = soup.find('body')
+    try:
+        value = tbody.find('span', class_='tw-text-gray-900 dark:tw-text-white tw-text-3xl').text
+        return value.replace('€', '').replace(',', '.').replace(' ', '').replace('$', '')
+    except:
+        print('Error al rasrear el precio de bnb')
+    return 0
 
 
 def main():

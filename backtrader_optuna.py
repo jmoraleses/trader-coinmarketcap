@@ -66,10 +66,9 @@ class Bits(bt.Strategy):
 
     def next(self):
         # if True:
-        # if 1.0 > self.price_min > 0.000000000001:
         if 0.000000001 > self.price_min > 0.000000000001:
 
-            if self.volume_ini < 3000000 and self.finish is False:
+            if self.volume_ini < 3000000 and self.finish is False and self.contador >= self.range:
 
                 if self.buying is False and ((1.40 > self.valor_relativo > 0.75) or self.valor_relativo == 0):
                 # if self.precio_relativo <= self.price_relative_range and self.precio_relativo >=self.price_relative_range_minimum and ((self.volumen_relativo <= self.volume_relative_range and self.volumen_relativo >= self.volume_relative_range_minimum) or self.volumen_relativo == 0) and self.buying is False:
@@ -86,7 +85,7 @@ class Bits(bt.Strategy):
                         self.capital_lost = self.capital_now - (self.capital_now * (self.percentage_lost / 100))
                     self.capital_before = self.capital_now
 
-                    if self.capital_now >= self.capital_win:# or self.capital_now <= self.capital_lost: #(self.data.open > 0 and self.precio_relativo_n <= self.precio_relativo_negativo)
+                    if self.capital_now >= self.capital_win:# or self.capital_now <= self.capital_lost:
                         self.order = self.close()
                         self.finish = True
 
@@ -115,7 +114,7 @@ def opt_objective(trial):
     price_relative_range_minimum = trial.suggest_float('price_relative_range_minimum', 0.40, 0.40)
     volume_relative_range = trial.suggest_float('volume_relative_range', 1.0, 1.0)
     volume_relative_range_minimum = trial.suggest_float('volume_relative_range_minimum', 0.1, 0.1)
-    percentage = trial.suggest_int('percentage', 1000, 1000) #250
+    percentage = trial.suggest_int('percentage', 500, 500) #1000
     percentage_lost = trial.suggest_float('percentage_lost', 30, 30) #35
     datasize = trial.suggest_int('datasize', size, size)
     volume_ini = trial.suggest_int('volume_ini', volume_ini, volume_ini)
