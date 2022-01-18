@@ -11,8 +11,8 @@ from web3 import Web3
 import coinmarketcap
 
 capital = 0
-# address = None
-# private_key = None
+address = None
+private_key = None
 position_open = 1
 position_max = 10  # cantidad total de transacciones permitidas al mismo tiempo
 all_tokens = []
@@ -441,16 +441,15 @@ def main():
     global capital
     global address
     global private_key
-    # args = parse_args()
-    # capital = float(args.capital)
-    # address = str(args.address)
-    # private_key = str(args.private_key)
-    # terminate = bool(args.terminate)
-    terminate = False ###
 
-    # Comprobamos los tokens del listado
-    # html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
-    # all_tokens = find_tokens(html)
+    args = parse_args()
+    capital = float(args.capital)
+    address = str(args.address)
+    private_key = str(args.private_key)
+    terminate = bool(args.terminate)
+
+
+
 
     if not os.path.exists("csv"):
         os.makedirs("csv")
@@ -458,9 +457,8 @@ def main():
         os.makedirs("csv/operations")
 
     if terminate is True:
-        pass
-        # closeAllTransactions()
-    elif address is not '' and private_key is not '' and capital > 0.0:
+        closeAllTransactions()
+    elif address is not '' and private_key is not '':
         time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
         print('{} start'.format(time_now))
         Broker().run()
