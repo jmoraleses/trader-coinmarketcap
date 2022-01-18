@@ -66,7 +66,8 @@ class Bits(bt.Strategy):
 
     def next(self):
         # if True:
-        if 0.000000001 > self.price_min > 0.000000000001:
+        if 1 > self.price_min > 0.000000000001:
+        # if 0.000000001 > self.price_min > 0.000000000001:
 
             if self.volume_ini < 3000000 and self.finish is False and self.contador >= self.range:
 

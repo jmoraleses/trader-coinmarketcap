@@ -10,18 +10,15 @@ from bs4 import BeautifulSoup
 from web3 import Web3
 import coinmarketcap
 
-capital = 100.0
+capital = 0
 # address = None
 # private_key = None
 position_open = 1
-position_max = 4  # cantidad total de transacciones permitidas al mismo tiempo
+position_max = 10  # cantidad total de transacciones permitidas al mismo tiempo
 all_tokens = []
 precio_bnb = 0.0
 
 
-#closeTransaction
-#parse_args
-#closeAll in main()
 
 
 def parse_args():
@@ -36,7 +33,7 @@ def parse_args():
     parser.add_argument('-c', '--capital',
                         type=float,
                         required=False,
-                        default=100.0,
+                        default=0.0,
                         help='Capital to trade')
 
     parser.add_argument('-a', '--address',
@@ -104,17 +101,18 @@ class Broker(object):
                 self.valor_relativo = (df['volume'].iloc[0] / df['volume'].iloc[self.range]) / (df['price'].iloc[0] / df['price'].iloc[self.range])
             self.price_min = df['price'].iloc[[0, self.range]].mean()
 
+            # if 1 > self.price_min > 0:
             if 0.000000001 > self.price_min > 0.000000000001:
 
                 if self.volume_ini < 3000000 and ((1.40 > self.valor_relativo > 0.75) or self.valor_relativo == 0):
 
                     # buy
-                    if self.last_operation is "nothing":
+                    if self.last_operation is "":
                         if self.capital > 0:
-                            self.coins = self.capital / self.data.iloc[-1]['price']
+                            self.coins = int(self.capital / self.data.iloc[-1]['price'])
                             # call (buy)
                             if position_open < position_max:
-                                buy(self.token, self.token_url, self.data.iloc[-1]['price'], self.coins)
+                                buy(self.token, self.token_url, self.data.iloc[-1]['price'], self.coins, self.capital)
                             return
                     #
 
@@ -140,7 +138,8 @@ class Broker(object):
         global precio_bnb
         capital_play = 0
         precio_bnb = float(find_bnb())
-
+        capital = float(get_balance()) * float(precio_bnb)
+        print('capital: {}'.format(capital))
 
         while True:
             if dt.datetime.now().minute == 0 and dt.datetime.now().hour % 2 == 0:
@@ -148,9 +147,11 @@ class Broker(object):
                 capital = float(get_balance()) * float(precio_bnb)
                 print('capital: {}'.format(capital))
 
+            # if True:
             if dt.datetime.now().minute % 5 == 0 and dt.datetime.now().second <= 1:
-                # html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
-                # all_tokens = find_tokens(html)
+                html = coinmarketcap.requestList("https://coinmarketcap.com/es/new/")
+                all_tokens = find_tokens(html)
+                closeTransactionTokens()
 
                 i = 0
                 data = []
@@ -160,15 +161,16 @@ class Broker(object):
                     if os.path.isfile(os.path.join('csv/', file)):
 
                         # comprobamos si existe alguna operación anterior sobre el token
-                        last_operation = 'nothing'
+                        last_operation = ''
                         last_coins_operation = 0
                         last_price_operation = 0
 
                         if position_open < position_max:
-                            capital = float(get_balance()) * float(precio_bnb)
-                            capital_play = float(capital) - float(float(capital)/position_max)
+                            capital = float(get_balance()) # * float(precio_bnb)
+                            capital_play = float(float(capital)/position_max)
                         else:
                             capital_play = 0
+
                         name_file_operations = 'csv/operations/' + file.replace('.csv', '') + "_operations.csv"
                         if os.path.isfile(name_file_operations):
                             df_operations = pd.read_csv(name_file_operations, index_col=0)
@@ -207,7 +209,7 @@ def getABI():
     file.close()
 
 
-def buy(token_name, token_url, price, coins):
+def buy(token_name, token_url, price, coins, amount):
     global address
     global private_key
     global position_open
@@ -241,28 +243,30 @@ def buy(token_name, token_url, price, coins):
         if position_open < position_max:
             position_open += 1
 
+            print("amount: " + str(amount))
+
             # # Create the transaction
-            # pancakeswap2_txn = contract.functions.swapExactETHForTokens(
-            #     0,  # coins or you can put a 0 if you don't want to care
-            #     [spend, contract_id],
-            #     address,
-            #     (int(time.time()) + 1000000)
-            # ).buildTransaction({
-            #     'from': address,
-            #     'value': web3.toWei(coins, 'ether'),  # This is the Token(BNB) amount you want to Swap from
-            #     'gas': 250000,
-            #     'gasPrice': web3.toWei('7', 'gwei'),
-            #     'nonce': nonce,
-            # })
-            #
-            # signed_txn = web3.eth.account.sign_transaction(pancakeswap2_txn, private_key=private_key)
-            # tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
-            # print('Buy {} tx: {}'.format(token_name, web3.toHex(tx_token)))
+            pancakeswap2_txn = contract.functions.swapExactETHForTokens(
+                0,  # coins or you can put a 0 if you don't want to care
+                [spend, contract_id],
+                address,
+                (int(time.time()) + 1000000)
+            ).buildTransaction({
+                'from': address,
+                'value': web3.toWei(amount, 'ether'),  # This is the Token(BNB) amount you want to Swap from
+                'gas': 250000,
+                'gasPrice': web3.toWei('5', 'gwei'),
+                'nonce': nonce,
+            })
+
+            signed_txn = web3.eth.account.sign_transaction(pancakeswap2_txn, private_key=private_key)
+            tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            print('Buy {} tx: {}'.format(token_name, web3.toHex(tx_token)))
 
             # Guardar en csv la fecha, la compra y la cantidad de tokens
             time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
             data = pd.json_normalize(
-                {'time': time_now, 'name': token_name, 'operation': 'buy', 'coins': coins, 'price': price, 'token_url': token_url})
+                {'time': time_now, 'name': token_name, 'operation': 'buy', 'coins': coins, 'amount': amount, 'price': price, 'token_url': token_url})
             if os.path.isfile("csv/operations/" + token_name + "_operations.csv"):
                 df_buy = pd.read_csv("csv/operations/" + token_name + "_operations.csv", index_col=0)
                 df_buy = df_buy.append(data, ignore_index=True)
@@ -280,7 +284,7 @@ def buy(token_name, token_url, price, coins):
         return False
 
 
-def sell(token_name, token_url, coins, price):
+def sell(token_name, token_url, coins, price, amount):
     global address
     global private_key
     global position_open
@@ -296,32 +300,32 @@ def sell(token_name, token_url, coins, price):
     # print(PancakeABI)
 
     # Token to BNB
-    spend = web3.toChecksumAddress(token_url) # token url
+    spend = web3.toChecksumAddress("0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c") # to Wrapped BNB token
 
     # Setup the PancakeSwap contract
     contract = web3.eth.contract(address=router_pancake_address, abi=PancakeABI)
     nonce = web3.eth.get_transaction_count(address)
-    contract_id = web3.toChecksumAddress("0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c") # to Wrapped BNB token
+    contract_id = web3.toChecksumAddress(token_url) # token_url
 
     try:
 
-        # # Create the transaction
-        # pancakeswap2_txn = contract.functions.swapExactETHForTokens(
-        #     0,  # coins or you can put a 0 if you don't want to care
-        #     [spend, contract_id],
-        #     address,
-        #     (int(time.time()) + 1000000)
-        # ).buildTransaction({
-        #     'from': address,
-        #     'value': web3.toWei(coins, 'ether'),  # This is the Token(BNB) amount you want to Swap from
-        #     'gas': 250000,
-        #     'gasPrice': web3.toWei('7', 'gwei'),
-        #     'nonce': nonce,
-        # })
-        #
-        # signed_txn = web3.eth.account.sign_transaction(pancakeswap2_txn, private_key=private_key)
-        # tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
-        # print('Sell {} tx: {}'.format(token_name, web3.toHex(tx_token)))
+        pancakeswap2_txn = contract.functions.swapExactTokensForETHSupportingFeeOnTransferTokens(
+            int(coins), 0,
+            [contract_id, spend],
+            address,
+            (int(time.time() + 1000000))
+        ).buildTransaction({
+            'from': address,
+            'gas': 250000,
+            'gasPrice': web3.toWei('5', 'gwei'),
+            'nonce': web3.eth.get_transaction_count(address),
+            'value': 0
+        })
+
+        signed_txn = web3.eth.account.sign_transaction(pancakeswap2_txn, private_key=private_key)
+        tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+        print('Sell {} tx: {}'.format(token_name, web3.toHex(tx_token)))
+
         time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
         print('{} Sell {}: {} {}'.format(time_now, token_name, coins, price))
         position_open -= 1
@@ -329,9 +333,8 @@ def sell(token_name, token_url, coins, price):
         # guardar en el archivo transacciones la venta
         time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
         data = pd.json_normalize(
-            {'time': time_now, 'name': token_name, 'operation': 'sell', 'coins': coins, 'price': price,
+            {'time': time_now, 'name': token_name, 'operation': 'sell', 'coins': coins, 'amount': amount, 'price': price,
              'token_url': token_url})
-
         if os.path.isfile("csv/operations/" + token_name + "_operations.csv"):
             df_sell = pd.read_csv("csv/operations/" + token_name + "_operations.csv", index_col=0)
             df_sell = df_sell.append(data, ignore_index=True)
@@ -367,8 +370,9 @@ def closeTransaction(token_name, price):
         if df_close.iloc[-1]['operation'] == 'buy':
             token_url = df_close.iloc[-1]['token_url']
             coins = df_close.iloc[-1]['coins']
+            amount = df_close.iloc[-1]['amount']
             # sell token
-            sell(token_name, token_url, coins, price)
+            sell(token_name, token_url, coins, price, amount)
 
 
 def closeAllTransactions():
@@ -387,7 +391,7 @@ def closeTransactionTokens():
             tokens.append(file.replace('_operations.csv', ''))
     for i in range(len(tokens)):
         if tokens[i] not in all_tokens:
-            closeTransaction(all_tokens[i], 0)
+            closeTransaction(tokens[i], 0)
 
 
 # def delete_files_dead():
@@ -428,7 +432,7 @@ def find_bnb():
         value = tbody.find('span', class_='tw-text-gray-900 dark:tw-text-white tw-text-3xl').text
         return value.replace('€', '').replace(',', '.').replace(' ', '').replace('$', '')
     except:
-        print('Error al rasrear el precio de bnb')
+        print('Error al rastrear el precio de bnb')
     return 0
 
 
@@ -454,7 +458,7 @@ def main():
         os.makedirs("csv/operations")
 
     if terminate is True:
-        pass ###
+        pass
         # closeAllTransactions()
     elif address is not '' and private_key is not '' and capital > 0.0:
         time_now = dt.datetime.strptime(dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S')
