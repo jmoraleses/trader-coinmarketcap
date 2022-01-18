@@ -198,12 +198,3 @@ if __name__ == '__main__':
             token = file.split('.')[0]
             print(token)
             optuna_search(token)
-    # optuna_search("Crypto-Arcade-Punk")
-    # optuna_search("Multistarter")
-    # optuna_search("BullDog-Coin")
-    # optuna_search("Community-Token")
-    # optuna_search("DogeWhisky")
-    # optuna_search("Metaland-DAO")
-    # optuna_search("YmplePay")
-    # optuna_search("Shiba-Hunter")
-    # optuna_search("FirstDog")
